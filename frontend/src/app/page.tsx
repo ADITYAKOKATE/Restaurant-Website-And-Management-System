@@ -1,35 +1,46 @@
+import Hero from '@/components/Home/Hero/Hero';
+import TrustStats from '@/components/Home/TrustStats/TrustStats';
+import FeaturedDishes from '@/components/Home/FeaturedDishes/FeaturedDishes';
+import About from '@/components/Home/About/About';
+import MenuCategories from '@/components/Home/MenuCategories/MenuCategories';
+import Offers from '@/components/Home/Offers/Offers';
+import WhyChooseUs from '@/components/Home/WhyChooseUs/WhyChooseUs';
+import Gallery from '@/components/Home/Gallery/Gallery';
+import Testimonials from '@/components/Home/Testimonials/Testimonials';
+import Contact from '@/components/Home/Contact/Contact';
+
+/**
+ * HOME PAGE
+ *
+ * Modern Next.js Page Component
+ * - Server Component by default
+ * - Imports from Home components directory
+ * - Scalable structure for adding more sections
+ *
+ * Structure:
+ * 1. Hero Section — First impression, branding, CTAs
+ * 2. Featured Dishes — Menu highlights (coming next)
+ * 3. About Section — Story & heritage
+ * 4. Testimonials — Social proof
+ * 5. CTA Section — Final conversion
+ * 6. Contact/Reservation — Engagement
+ */
+
 export default function HomePage() {
   return (
-    <div style={{
-      minHeight: '80vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      textAlign: 'center',
-      gap: '16px',
-      padding: '32px',
-      paddingTop: '112px',
-    }}>
-      <div style={{ fontSize: '80px' }}>🍛</div>
-      <h1 style={{
-        fontFamily: 'var(--font-heading)',
-        fontSize: '3rem',
-        background: 'var(--gradient-brand)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
-      }}>
-        Premacha Vada
-      </h1>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '18px', maxWidth: '500px' }}>
-        The home page is coming up in Day 2! For now, check out the Login and Register pages.
-      </p>
-      <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-        <a href="/register" className="btn btn-primary">Sign Up</a>
-        <a href="/login" className="btn btn-secondary">Login</a>
-        <a href="/menu" className="btn btn-ghost">View Menu</a>
-      </div>
-    </div>
+    <>
+      {/* Hero Section */}
+      <Hero />
+
+      <TrustStats />
+      <FeaturedDishes />
+      <About />
+      <MenuCategories />
+      <Offers />
+      <WhyChooseUs />
+      <Gallery />
+      <Testimonials />
+      <Contact />
+    </>
   );
 }

@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 import './Navbar.css';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const { cartCount } = useCart();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -55,16 +57,27 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Right Actions */}
-        <div className="navbar__actions">
-          {user ? (
-            <>
-              <Link href="/cart" className="navbar__icon-btn" aria-label="Cart">
+        {/* Right Actions & Mobile Hamburger */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginLeft: 'auto' }}>
+          
+          {/* Cart Icon - Always visible when logged in */}
+          {user && (
+            <Link href="/cart" className="navbar__icon-btn" aria-label="Cart">
+              <div style={{ position: 'relative' }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                   <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                 </svg>
-              </Link>
+                {cartCount > 0 && (
+                  <span className="navbar__cart-badge">{cartCount}</span>
+                )}
+              </div>
+            </Link>
+          )}
+
+          {/* Desktop Actions */}
+          <div className="navbar__actions">
+            {user ? (
               <div className="navbar__user-menu">
                 <button className="navbar__user-btn">
                   <div className="navbar__avatar">{user.name.charAt(0).toUpperCase()}</div>
@@ -95,23 +108,24 @@ export default function Navbar() {
                   </button>
                 </div>
               </div>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="btn btn-ghost btn-sm">Login</Link>
-              <Link href="/register" className="btn btn-primary btn-sm">Sign Up</Link>
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <Link href="/login" className="btn btn-ghost btn-sm">Login</Link>
+                <Link href="/register" className="btn btn-primary btn-sm">Sign Up</Link>
+              </>
+            )}
+          </div>
 
-        {/* Mobile Hamburger */}
-        <button
-          className={`navbar__hamburger ${menuOpen ? 'navbar__hamburger--open' : ''}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          <span /><span /><span />
-        </button>
+          {/* Mobile Hamburger */}
+          <button
+            className={`navbar__hamburger ${menuOpen ? 'navbar__hamburger--open' : ''}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            style={{ marginLeft: 0 }}
+          >
+            <span /><span /><span />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -124,8 +138,11 @@ export default function Navbar() {
         <div className="navbar__mobile-actions">
           {user ? (
             <>
-              <Link href="/cart" className="btn btn-ghost">🛒 Cart</Link>
-              <Link href="/orders" className="btn btn-ghost">📋 Orders</Link>
+              <Link href="/profile" className="btn btn-ghost">👤 My Profile</Link>
+              <Link href="/orders" className="btn btn-ghost">📋 My Orders</Link>
+              {user.role === 'admin' && (
+                <Link href="/admin" className="btn btn-ghost" style={{ color: 'var(--secondary)' }}>⚙️ Admin Panel</Link>
+              )}
               <button onClick={logout} className="btn btn-secondary">Logout</button>
             </>
           ) : (

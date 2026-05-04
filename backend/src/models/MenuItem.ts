@@ -4,7 +4,8 @@ export interface IMenuItem extends Document {
   name: string;
   description: string;
   price: number;
-  category: 'vada' | 'drinks' | 'snacks' | 'combos' | 'desserts';
+  category: string;
+  subCategory?: string;
   image: string;
   isAvailable: boolean;
   isVeg: boolean;
@@ -16,13 +17,10 @@ export interface IMenuItem extends Document {
 const MenuItemSchema: Schema<IMenuItem> = new Schema(
   {
     name: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
+    description: { type: String, default: '', trim: true },
     price: { type: Number, required: true, min: 0 },
-    category: {
-      type: String,
-      enum: ['vada', 'drinks', 'snacks', 'combos', 'desserts'],
-      required: true,
-    },
+    category: { type: String, required: true, trim: true },
+    subCategory: { type: String, trim: true },
     image: { type: String, default: '' },
     isAvailable: { type: Boolean, default: true },
     isVeg: { type: Boolean, default: true },

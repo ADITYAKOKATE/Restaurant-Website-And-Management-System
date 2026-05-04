@@ -4,6 +4,9 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './lib/db';
 import authRoutes from './routes/auth';
+import menuRoutes from './routes/menu';
+import cartRoutes from './routes/cart';
+import orderRoutes from './routes/order';
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +36,9 @@ connectDB();
 // API Routes
 // ─────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
+app.use('/api/menu', menuRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

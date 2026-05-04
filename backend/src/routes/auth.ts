@@ -129,4 +129,59 @@ router.get('/me', requireAuth, (req: AuthRequest, res: Response): void => {
   res.status(200).json({ success: true, user: req.user });
 });
 
+// ─────────────────────────────────────────────
+// GET /api/auth/profile  — get full user profile
+// ─────────────────────────────────────────────
+router.get('/profile', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.user?.userId).select('-password');
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found.' });
+      return;
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Profile fetch error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/auth/profile  — update user profile
+// ─────────────────────────────────────────────
+router.patch('/profile', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, phone, address } = req.body;
+    const updateData: any = {};
+    if (name?.trim()) updateData.name = name.trim();
+    if (phone !== undefined) updateData.phone = phone.trim();
+    if (address !== undefined) updateData.address = address.trim();
+
+    const user = await User.findByIdAndUpdate(
+      req.user?.userId,
+      updateData,
+      { new: true, select: '-password' }
+    );
+
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found.' });
+      return;
+    }
+
+    // Re-issue JWT with updated name
+    const token = signToken({
+      userId: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    });
+    res.cookie('auth_token', token, cookieOptions);
+
+    res.json({ success: true, message: 'Profile updated successfully!', user });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
 export default router;

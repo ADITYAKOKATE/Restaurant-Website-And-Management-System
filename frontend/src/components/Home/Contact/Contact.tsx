@@ -1,7 +1,7 @@
 import styles from './Contact.module.css';
 
 export default function Contact() {
-  const mapAddress = 'Mumbai, Maharashtra';
+  const mapAddress = '747, Aurangabad - Ahmednagar - Pune Hwy, Wagholi, Pune, Maharashtra 412207';
   const mapQuery = encodeURIComponent(mapAddress);
 
   return (
@@ -11,7 +11,7 @@ export default function Contact() {
           <p className={styles.kicker}>Contact Preview</p>
           <h2 id="contact-heading" className={styles.heading}>Plan Your Visit with Ease</h2>
           <div className={styles.details}>
-            <p><strong>📍 Address:</strong> Mumbai, Maharashtra</p>
+            <p><strong>📍 Address:</strong> 747, Aurangabad - Ahmednagar - Pune Hwy, Wagholi, Pune, Maharashtra 412207</p>
             <p><strong>🕒 Hours:</strong> 11:00 AM - 10:00 PM</p>
             <p><strong>📞 Phone:</strong> +91 98765 43210</p>
           </div>

@@ -561,6 +561,13 @@ h1, h2, h3, h4, h5, h6 {
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); }
 
+.cart-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
 @media (max-width: 1024px) {
   .section { padding: var(--space-4xl) var(--space-lg); }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -570,7 +577,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 768px) {
   .section { padding: var(--space-3xl) var(--space-md); }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3, .grid-4, .cart-layout { grid-template-columns: 1fr; }
   .btn-lg { padding: 14px 28px; font-size: 15px; }
   .container { padding: 0 var(--space-md); }
   .section-header p { font-size: 16px; }

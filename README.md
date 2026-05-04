@@ -1,6 +1,6 @@
 # 🍛 Premacha Vada
 
-> **Authentic Mumbai Street Food** — Full-Stack Restaurant Web Application
+> **Authentic Maharashtrian Street Food** — Full-Stack Restaurant Web Application
 
 A modern, production-grade online ordering platform for Premacha Vada, built with a decoupled Next.js frontend and Express.js backend.
 
@@ -16,53 +16,34 @@ premacha-vada/
 │   │   ├── app/                       # App Router pages
 │   │   │   ├── layout.tsx             # Root layout (Navbar + Footer wrapper)
 │   │   │   ├── page.tsx               # Home page
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx           # Login page
-│   │   │   └── register/
-│   │   │       ├── page.tsx           # Register page
-│   │   │       └── auth.css           # Shared auth page styles
+│   │   │   ├── login/                 # Login page
+│   │   │   ├── register/              # Register page
+│   │   │   ├── menu/                  # Menu page with filtering & cart add
+│   │   │   ├── cart/                  # Cart & Checkout page
+│   │   │   ├── orders/                # Orders tracking & history page
+│   │   │   └── profile/               # User profile management page
 │   │   │
-│   │   ├── components/
-│   │   │   ├── Navbar/
-│   │   │   │   ├── Navbar.tsx         # Responsive navbar with auth state
-│   │   │   │   └── Navbar.css
-│   │   │   └── Footer/
-│   │   │       ├── Footer.tsx         # Site footer
-│   │   │       └── Footer.css
-│   │   │
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx        # Global auth state (user, login, logout)
-│   │   │
-│   │   └── globals.css                # Design system (tokens, buttons, forms, animations)
+│   │   ├── components/                # Reusable UI components (Navbar, Footer, Home, etc.)
+│   │   ├── context/                   # Global state (AuthContext, CartContext)
+│   │   └── globals.css                # Design system (tokens, utilities, responsive layout)
 │   │
+│   ├── public/                        # Static assets (images, PDF menus)
 │   ├── next.config.ts                 # API proxy → Express backend
-│   ├── .env.local                     # Frontend env variables
 │   └── package.json
 │
 ├── backend/                           # Express Server (Node.js, TypeScript)
 │   ├── src/
 │   │   ├── server.ts                  # App entry point, middleware setup
 │   │   │
-│   │   ├── models/
-│   │   │   ├── User.ts                # Mongoose User schema
-│   │   │   ├── MenuItem.ts            # Mongoose MenuItem schema
-│   │   │   └── Order.ts              # Mongoose Order schema
-│   │   │
-│   │   ├── routes/
-│   │   │   └── auth.ts               # Auth routes: /register /login /logout /me
-│   │   │
-│   │   ├── middleware/
-│   │   │   └── authMiddleware.ts      # requireAuth & requireAdmin guards
-│   │   │
-│   │   └── lib/
-│   │       ├── db.ts                  # MongoDB connection handler
-│   │       └── auth.ts                # JWT sign/verify + cookie config
+│   │   ├── models/                    # Mongoose schemas (User, MenuItem, Order, Cart)
+│   │   ├── routes/                    # API routes (auth, menu, cart, order)
+│   │   ├── middleware/                # requireAuth & requireAdmin guards
+│   │   ├── scripts/                   # Data seeding scripts (seedMenu)
+│   │   └── lib/                       # DB connection & Auth utilities
 │   │
 │   ├── .env                           # Backend env variables
 │   └── package.json
 │
-├── hotel premacha wada 2025.pdf       # Official menu reference
-├── .gitignore
 └── README.md
 ```
 
@@ -113,18 +94,7 @@ MongoDB (local / Atlas)
 - Node.js v18+
 - MongoDB running locally on port `27017`, **OR** a MongoDB Atlas connection string
 
----
-
-### 1. Clone the Repository
-
-```bash
-git clone <your-repo-url>
-cd premacha-vada
-```
-
----
-
-### 2. Backend Setup
+### 1. Backend Setup
 
 ```bash
 cd backend
@@ -148,20 +118,11 @@ npm run dev
 
 > Backend runs at **http://localhost:5000**
 
----
-
-### 3. Frontend Setup
+### 2. Frontend Setup
 
 ```bash
 cd frontend
 npm install
-```
-
-Create a `.env.local` file in `frontend/`:
-
-```env
-BACKEND_URL=http://localhost:5000
-NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 Start the frontend dev server:
@@ -174,34 +135,24 @@ npm run dev
 
 ---
 
-## 🔌 API Reference
+## 🔌 Core API Reference
 
 ### Auth Routes — `/api/auth`
-
 | Method | Endpoint              | Auth Required | Description                          |
 |--------|-----------------------|---------------|--------------------------------------|
 | POST   | `/api/auth/register`  | ❌             | Register a new user account          |
 | POST   | `/api/auth/login`     | ❌             | Login and receive auth cookie        |
 | POST   | `/api/auth/logout`    | ❌             | Clear auth cookie and logout         |
 | GET    | `/api/auth/me`        | ✅             | Return the currently logged-in user  |
+| GET    | `/api/auth/profile`   | ✅             | Return user profile data             |
+| PATCH  | `/api/auth/profile`   | ✅             | Update user profile data             |
 
-**Request body for `/register`:**
-```json
-{
-  "name": "Rahul Sharma",
-  "email": "rahul@example.com",
-  "password": "securePassword123",
-  "phone": "+91 98765 43210"
-}
-```
-
-**Request body for `/login`:**
-```json
-{
-  "email": "rahul@example.com",
-  "password": "securePassword123"
-}
-```
+### Order Routes — `/api/orders`
+| Method | Endpoint              | Auth Required | Description                          |
+|--------|-----------------------|---------------|--------------------------------------|
+| POST   | `/api/orders`         | ✅             | Place a new order (Checkout)         |
+| GET    | `/api/orders`         | ✅             | Get user's order history             |
+| GET    | `/api/orders/:id`     | ✅             | Get specific order details           |
 
 ---
 
@@ -223,59 +174,33 @@ npm run dev
 | name          | String  | Required                                      |
 | description   | String  | Required                                      |
 | price         | Number  | Required, min 0                               |
-| category      | String  | `vada`, `drinks`, `snacks`, `combos`, `desserts` |
+| category      | String  | Menu section                                  |
 | image         | String  | URL to image                                  |
-| isAvailable   | Boolean | Default: true                                 |
 | isVeg         | Boolean | Default: true                                 |
-| isBestseller  | Boolean | Default: false                                |
 
 ### Order
 | Field               | Type     | Notes                                                          |
 |---------------------|----------|----------------------------------------------------------------|
 | user                | ObjectId | Ref to User                                                    |
-| items               | Array    | `[{ menuItem, name, price, quantity }]`                        |
+| items               | Array    | `[{ menuItem, name, price, quantity, image }]`                 |
 | totalAmount         | Number   | Required                                                       |
+| tokenNumber         | Number   | Unique order queue number                                      |
+| orderType           | String   | `delivery`, `dine_in`                                          |
+| paymentMethod       | String   | `online`, `cod`                                                |
 | status              | String   | `pending`, `confirmed`, `preparing`, `ready`, `delivered`, `cancelled` |
 | paymentStatus       | String   | `pending`, `paid`, `failed`                                    |
-| deliveryAddress     | String   | Optional                                                       |
-| phone               | String   | Optional                                                       |
-| specialInstructions | String   | Optional                                                       |
-
----
-
-## 🎨 Design System
-
-The CSS design system lives in `frontend/src/app/globals.css` and provides:
-
-- **Color tokens** — brand orange (`#FF6B35`), gold (`#FFD700`), dark backgrounds
-- **Typography** — Outfit (body) + Playfair Display (headings) from Google Fonts
-- **Utility classes** — `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`, `.card`, `.glass`
-- **Form classes** — `.form-group`, `.form-input`, `.form-label`, `.form-error`
-- **Layout** — `.container`, `.section`, `.grid-2`, `.grid-3`, `.grid-4`
-- **Animations** — `fadeInUp`, `fadeIn`, `slideInLeft`, `float`, `pulse-glow`
-- **Responsive** — Breakpoints at 480px, 768px, and 1024px
 
 ---
 
 ## 📋 Current Status
 
-| Feature                  | Status        |
-|--------------------------|---------------|
-| Project architecture     | ✅ Complete   |
-| Design system (CSS)      | ✅ Complete   |
-| User registration        | ✅ Complete   |
-| User login / logout      | ✅ Complete   |
-| JWT auth (httpOnly cookie)| ✅ Complete  |
-| Navbar (responsive)      | ✅ Complete   |
-| Footer                   | ✅ Complete   |
-| DB models (User, MenuItem, Order) | ✅ Complete |
-| Home page                | 🔄 In Progress |
-| Menu page                | 🔄 Planned    |
-| Cart functionality       | 🔄 Planned    |
-| Order placement          | 🔄 Planned    |
-| Order tracking           | 🔄 Planned    |
-| Admin panel              | 🔄 Planned    |
-| Payment integration      | 🔄 Planned    |
+| Phase | Feature                  | Status        |
+|-------|--------------------------|---------------|
+| **Phase 1** | Foundation & Auth (Register, Login, JWT, DB, Setup) | ✅ Complete   |
+| **Phase 2** | Menu & Cart (Menu List, Filtering, Cart State, Sync) | ✅ Complete   |
+| **Phase 3** | Checkout & Orders (Checkout Form, Token Gen, History)| ✅ Complete   |
+| **Phase 4A**| Customer Polish (Profile Page, Live Status Polling)  | ✅ Complete   |
+| **Phase 4B**| Admin Panel (Kanban, Stats, Menu Management)         | 🔄 Handoff Ready |
 
 ---
 
@@ -289,29 +214,4 @@ The CSS design system lives in `frontend/src/app/globals.css` and provides:
 
 ---
 
-## 📜 Available Scripts
-
-### Backend
-```bash
-npm run dev      # Start dev server with nodemon + ts-node
-npm run build    # Compile TypeScript to dist/
-npm run start    # Run compiled dist/server.js
-```
-
-### Frontend
-```bash
-npm run dev      # Start Next.js dev server (with Turbopack)
-npm run build    # Build production bundle
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
-
----
-
-## 📝 License
-
-This project is built for internship/educational purposes.
-
----
-
-*Made with ❤️ in Mumbai — Premacha Vada 🍛*
+*Made with ❤️ in Pune — Premacha Vada 🍛*

@@ -1,0 +1,699 @@
+/* ============================================================
+   HERO SECTION CSS
+   ============================================================
+   Beginner-friendly, readable, clean structure
+   - Simple but impressive styling
+   - Easy to understand and modify
+   - Interview-friendly code
+   ============================================================ */
+
+/* ============================================================
+   HERO CONTAINER
+   ============================================================
+   The main wrapper that holds everything
+*/
+
+.hero {
+  /* Full viewport height - makes it stand out */
+  min-height: 100vh;
+  width: 100%;
+
+  /* Dark background from design system */
+  background-color: var(--bg-base);
+
+  /* Center content and add space */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Padding for breathing room */
+  padding: var(--space-lg) var(--space-md);
+
+  /* Account for fixed navbar */
+  margin-top: 80px;
+
+  /* Make sure content doesn't go behind things */
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Inner container - holds left and right sections */
+.container {
+  /* Use grid for two-column layout */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4xl);
+
+  /* Maximum width - keeps content readable */
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+/* On tablets and desktop - make two columns */
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5xl);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hero {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .container {
+    gap: var(--space-3xl);
+  }
+
+  .content {
+    gap: var(--space-xl);
+  }
+}
+
+/* ============================================================
+   LEFT SECTION - TEXT CONTENT
+   ============================================================
+*/
+
+.content {
+  /* Stack everything vertically */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+
+  /* Center content on desktop when paired with visual */
+  justify-content: center;
+  min-width: 0;
+}
+
+/* ============================================================
+   BADGE - Small tag at top
+   ============================================================
+   Purpose: Establishes authenticity
+*/
+
+.badge {
+  /* Inline display - doesn't take full width */
+  display: inline-block;
+  width: fit-content;
+
+  /* Styling */
+  padding: 8px 16px;
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  background: rgba(255, 107, 53, 0.08);
+
+  /* Text styling */
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--primary);
+
+  /* Smooth hover effect */
+  transition: all var(--transition-base);
+}
+
+.badge:hover {
+  background: rgba(255, 107, 53, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   HEADING - Main title with gradient
+   ============================================================
+*/
+
+.heading {
+  /* Remove default margins */
+  margin: 0;
+
+  /* Typography from design system */
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-primary);
+
+  /* Responsive font sizes */
+  font-size: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .heading {
+    font-size: 4.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading {
+    font-size: 5rem;
+  }
+}
+
+/* Gradient text on the second word */
+.highlight {
+  /* Apply gradient from design system */
+  background: var(--gradient-brand);
+
+  /* Make gradient visible on text */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  /* Add subtle glow effect on hover */
+  transition: filter 0.3s ease;
+}
+
+.heading:hover .highlight {
+  filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.4));
+}
+
+/* ============================================================
+   DESCRIPTION - Body text
+   ============================================================
+*/
+
+.description {
+  margin: 0;
+
+  /* Typography */
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  font-weight: 400;
+
+  /* Keep it readable with max-width */
+  max-width: 500px;
+}
+
+@media (max-width: 767px) {
+  .description {
+    font-size: 16px;
+  }
+}
+
+/* ============================================================
+   CTA BUTTONS - Call-to-Action
+   ============================================================
+   These drive the main actions (Explore Menu, Reserve Table)
+*/
+
+.ctaButtons {
+  /* Stack buttons horizontally, wrap on mobile */
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+
+  /* Add space above */
+  margin-top: var(--space-md);
+}
+
+/* On mobile - stack vertically */
+@media (max-width: 480px) {
+  .ctaButtons {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}
+
+/* Base button styling */
+.btnPrimary,
+.btnSecondary {
+  /* Make it look like a button */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Padding - comfortable size */
+  padding: 14px 32px;
+
+  /* Text styling */
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+
+  /* Shape */
+  border-radius: var(--radius-md);
+  border: none;
+
+  /* Smooth interactions */
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+/* PRIMARY BUTTON - Main action (orange gradient) */
+.btnPrimary {
+  background: var(--gradient-brand);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.btnPrimary:hover {
+  /* Lift up on hover */
+  transform: translateY(-3px);
+  /* Stronger shadow when lifted */
+  box-shadow: var(--shadow-lg);
+}
+
+.btnPrimary:active {
+  /* Click feedback */
+  transform: translateY(0);
+}
+
+/* SECONDARY BUTTON - Alternative action (bordered) */
+.btnSecondary {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btnSecondary:hover {
+  /* Fill with color on hover */
+  background: var(--primary);
+  color: var(--text-inverse);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   TRUST INDICATORS - Build credibility
+   ============================================================
+   Shows ratings and customer count
+*/
+
+.trust {
+  /* Side-by-side layout */
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3xl);
+
+  /* Add space above */
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-2xl);
+  width: 100%;
+  max-width: 420px;
+  align-self: center;
+
+  /* Visual separator */
+  border-top: 1px solid var(--border-subtle);
+}
+
+.trustItem {
+  /* Stack vertically */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  text-align: center;
+}
+
+.trustValue {
+  /* Large, prominent number */
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.trustLabel {
+  /* Small descriptive text */
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   RIGHT SECTION - VISUAL CONTENT
+   ============================================================
+   This section is hidden on mobile
+*/
+
+.visual {
+  /* Hidden by default (mobile) */
+  display: none;
+  position: relative;
+  height: 600px;
+  max-width: 100%;
+  min-width: 0;
+  isolation: isolate;
+}
+
+/* Show on tablets and desktop */
+@media (min-width: 768px) {
+  .visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ============================================================
+   GLOW EFFECT - Background glow
+   ============================================================
+   Creates cinematic lighting effect
+*/
+
+.glow {
+  /* Positioned absolutely for layering */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* Size */
+  width: 400px;
+  height: 400px;
+
+  /* Glow effect using gradient */
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 53, 0.2) 0%,
+    transparent 70%
+  );
+
+  /* Blur makes it look like light */
+  filter: blur(80px);
+
+  /* Animate smoothly */
+  animation: gentleGlow 4s ease-in-out infinite;
+
+  /* Don't interfere with content */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.glowSecondary {
+  position: absolute;
+  top: 25%;
+  right: 8%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.18) 0%, transparent 70%);
+  filter: blur(40px);
+  z-index: 0;
+  animation: gentleGlow 5s ease-in-out infinite;
+}
+
+/* ============================================================
+   IMAGE BOX - Container for food image
+   ============================================================
+*/
+
+.imageBox {
+  /* Square container */
+  width: 350px;
+  height: 430px;
+
+  /* Premium card styling */
+  background: var(--gradient-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+
+  /* Shadow for depth */
+  box-shadow: var(--shadow-lg);
+
+  /* On top of glow */
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+
+  /* Gentle float animation */
+  animation: gentleFloat 5s ease-in-out infinite;
+}
+
+.imageBox::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: calc(var(--radius-xl) - 8px);
+  transform: rotate(-1.2deg);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.heroImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-slow);
+}
+
+.visual:hover .heroImage {
+  transform: scale(1.05);
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 13, 13, 0.18), rgba(13, 13, 13, 0.55));
+}
+
+.imageGrain {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.08) 0.7px, transparent 0.7px),
+    radial-gradient(rgba(0, 0, 0, 0.08) 0.7px, transparent 0.7px);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+  opacity: 0.14;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.imageTag {
+  position: absolute;
+  left: var(--space-md);
+  bottom: var(--space-md);
+  z-index: 4;
+  padding: 8px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: rgba(13, 13, 13, 0.84);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.floatingBadge {
+  position: absolute;
+  top: 65px;
+  right: 40px;
+  z-index: 3;
+  padding: 10px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-accent);
+  background: rgba(13, 13, 13, 0.82);
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   FLOATING CARD - Info card that floats
+   ============================================================
+   Shows rating and establishment year
+*/
+
+.floatingCard {
+  /* Positioned over the image box */
+  position: absolute;
+  bottom: 40px;
+  left: 10px;
+
+  /* Side-by-side layout */
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+
+  /* Premium styling */
+  background: rgba(37, 37, 37, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+
+  /* Elevation effect */
+  box-shadow: var(--shadow-md), var(--shadow-glow);
+
+  /* Float animation */
+  z-index: 3;
+  animation: gentleFloat 5s ease-in-out infinite 0.3s;
+}
+
+.sideCard {
+  position: absolute;
+  top: 230px;
+  right: -10px;
+  z-index: 3;
+  width: 220px;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: rgba(13, 13, 13, 0.84);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
+}
+
+.sideCardTitle {
+  margin: 0 0 6px;
+  color: var(--secondary);
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.sideCardText {
+  margin: 0;
+  color: var(--text-primary);
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.cardIcon {
+  font-size: 24px;
+  /* Subtle rotation animation */
+  animation: slowSpin 8s linear infinite;
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.cardSubtitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   ANIMATIONS - Smooth, subtle effects
+   ============================================================
+   These make the page feel polished
+*/
+
+@keyframes gentleGlow {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes subtleScale {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slowSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN - Mobile to Desktop
+   ============================================================
+
+   Mobile (< 480px):
+   - Single column, image hidden
+   - Heading smaller
+   - Buttons full width
+
+   Tablet (480px - 768px):
+   - Still single column
+   - Heading medium
+   - Buttons flexible
+
+   Desktop (768px+):
+   - Two columns
+   - Image visible
+   - Full experience
+*/
+
+@media (max-width: 480px) {
+  .heading {
+    font-size: 2.5rem;
+  }
+
+  .description {
+    font-size: 15px;
+  }
+
+  .trust {
+    gap: var(--space-xl);
+    font-size: 14px;
+  }
+
+  .trustValue {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .imageBox {
+    width: 320px;
+    height: 390px;
+  }
+
+  .floatingBadge {
+    top: 54px;
+    right: 16px;
+  }
+
+  .floatingCard {
+    bottom: 30px;
+    left: 0;
+  }
+
+  .sideCard {
+    top: 210px;
+    right: 0;
+    width: 190px;
+  }
+}

@@ -103,6 +103,7 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 body {
@@ -113,6 +114,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  width: 100%;
 }
 
 img {
@@ -560,6 +562,7 @@ h1, h2, h3, h4, h5, h6 {
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); }
 
 @media (max-width: 1024px) {
+  .section { padding: var(--space-4xl) var(--space-lg); }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
   .container { padding: 0 var(--space-lg); }
@@ -579,5 +582,20 @@ h1, h2, h3, h4, h5, h6 {
   .btn-sm { padding: 7px 16px; font-size: 12px; }
   .toast { min-width: 240px; max-width: calc(100vw - 32px); }
   .toast-container { right: var(--space-md); left: var(--space-md); }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+/* Respect user motion preferences - global animation reset */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 

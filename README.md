@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Premacha Wada | Enterprise Restaurant Management System
 
 A production-grade, full-stack ecosystem designed for high-volume Maharashtrian street food operations. This platform orchestrates a complex, multi-stakeholder workflow involving Customers, Administrators, Kitchen Staff, and Delivery Personnel.
@@ -124,6 +125,7 @@ npm run start
 ```
 
 ---
+
 
 ## 🍛 Project Mission
 **Premacha Wada** is dedicated to preserving the authenticity of Maharashtrian street food while leveraging cutting-edge technology to provide a world-class customer experience.

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   keywords: 'vada pav, pune restaurant, maharashtrian cuisine, premacha wada, order food online',
   openGraph: {
     title: 'Premacha Wada — Authentic Maharashtrian Restaurant',
-    description: 'Order the freshest and Maharashtrian dishes online.',
+    description: 'Order the freshest, most authentic dishes and Maharashtrian cuisine online',
     type: 'website',
   },
 };

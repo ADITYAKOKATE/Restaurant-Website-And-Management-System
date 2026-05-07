@@ -1,5 +1,10 @@
 # Premacha Wada | Enterprise Restaurant Management System
 
+<p align="center">
+  <img src="docs/assets/banner.png" alt="Premacha Wada Banner" width="100%">
+</p>
+
+
 A production-grade, full-stack ecosystem designed for high-volume Maharashtrian restaurant operations. This platform orchestrates a complex, multi-stakeholder workflow involving Customers, Administrators, Kitchen Staff, and Delivery Personnel.
 
 ---
@@ -17,6 +22,33 @@ The application is built on a **Decoupled Monolith** architecture, ensuring high
 | **Styling** | Custom Vanilla CSS | Hand-crafted design system for maximum performance and brand consistency. |
 
 ---
+
+## ✨ Visual Showcase
+
+### 🛒 Customer Experience
+| **Hero Experience** | **Digital Menu** |
+| :---: | :---: |
+| ![Hero](docs/assets/hero.png) | ![Menu](docs/assets/menu.png) |
+| *Premium dining experience landing page* | *Interactive menu with real-time filters* |
+
+| **Smart Cart** | **Order Tracking** |
+| :---: | :---: |
+| ![Cart](docs/assets/cart.png) | ![Tracking](docs/assets/order-tracking.png) |
+| *Streamlined checkout process* | *Real-time 6-stage order tracking* |
+
+### 🛠️ Administrative Control Center
+| **Operations Dashboard** | **Order Management** |
+| :---: | :---: |
+| ![Admin Dashboard](docs/assets/admin-dashboard.png) | ![Order Board](docs/assets/admin-orders.png) |
+| *Centralized business intelligence & metrics* | *Kanban-style live order orchestration* |
+
+| **Menu Orchestration** | **Business Analytics** |
+| :---: | :---: |
+| ![Menu Manager](docs/assets/admin-menu.png) | ![Analytics](docs/assets/admin-analytics.png) |
+| *Inventory & dynamic pricing control* | *Deep-dive revenue & trend analysis* |
+
+---
+
 
 ## 🔑 Role-Based Access Control (RBAC)
 

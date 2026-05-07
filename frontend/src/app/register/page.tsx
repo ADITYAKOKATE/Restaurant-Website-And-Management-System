@@ -92,7 +92,7 @@ export default function RegisterPage() {
             <div className="auth-panel__icon">🍛</div>
             <h2 className="auth-panel__title">Join the Premacha Family!</h2>
             <p className="auth-panel__desc">
-              Create your account and enjoy authentic Maharashtrian street food delivered right to your door.
+              Create your account and enjoy authentic Maharashtrian cuisine delivered right to your door.
             </p>
             <ul className="auth-panel__perks">
               <li><span className="auth-panel__perk-icon">⚡</span> Fast delivery to your doorstep</li>

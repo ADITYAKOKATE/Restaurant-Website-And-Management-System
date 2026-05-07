@@ -19,7 +19,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="footer__desc">
-              Bringing the authentic flavors of Maharashtra&apos;s beloved street food to your doorstep. Every bite tells a story of tradition and passion.
+              Bringing the authentic flavors of Maharashtra&apos;s beloved cuisine to your doorstep. Every bite tells a story of tradition and passion.
             </p>
             <div className="footer__socials">
               <a href="#" aria-label="Instagram" className="footer__social-btn">

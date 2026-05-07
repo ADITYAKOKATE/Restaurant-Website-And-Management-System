@@ -157,7 +157,7 @@ export default function AdminDashboardPanel() {
                 </div>
                 <div className={styles.orderItems}>
                   <span className={styles.subtlePill}>{order.items.length} item(s)</span>
-                  <span className={styles.subtlePill}>{order.orderType === 'dine_in' ? 'Dine-In' : 'Delivery'}</span>
+                  <span className={styles.subtlePill}>Delivery</span>
                   <span className={styles.subtlePill}>{isActiveOrder(order.status) ? 'Active' : 'Closed'}</span>
                 </div>
                 <div className={styles.orderFooter}>

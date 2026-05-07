@@ -19,10 +19,12 @@ interface Order {
   totalAmount: number;
   taxAmount: number;
   deliveryFee: number;
-  orderType: 'dine_in' | 'delivery';
+  discountAmount?: number;
+  appliedPromoCode?: string;
+  orderType: 'delivery';
   status: string;
   paymentMethod: 'online' | 'cod';
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
   tokenNumber: number;
   deliveryAddress: string;
   specialInstructions: string;
@@ -40,7 +42,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const DELIVERY_STEPS = ['Placed', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered'];
-const DINE_IN_STEPS  = ['Placed', 'Confirmed', 'Preparing', 'Ready to Collect', 'Collected'];
 
 export default function OrderDetailPage() {
   const { user, loading } = useAuth();
@@ -89,7 +90,7 @@ export default function OrderDetailPage() {
   if (!order) return null;
 
   const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
-  const steps = order.orderType === 'dine_in' ? DINE_IN_STEPS : DELIVERY_STEPS;
+  const steps = DELIVERY_STEPS;
   const currentStep = statusCfg.step;
   const isCancelled = order.status === 'cancelled';
   const date = new Date(order.createdAt).toLocaleDateString('en-IN', {
@@ -112,7 +113,7 @@ export default function OrderDetailPage() {
             <p className="order-detail-token">#{order.tokenNumber}</p>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{date}</p>
             <p style={{ fontSize: 13, marginTop: 4, color: 'var(--text-muted)' }}>
-              {order.orderType === 'dine_in' ? '🍽️ Dine-In' : '🚴 Delivery'}
+              🚴 Delivery
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -126,11 +127,11 @@ export default function OrderDetailPage() {
               className="order-payment-badge"
               style={{
                 marginTop: 8,
-                color: order.paymentStatus === 'paid' ? '#2ECC71' : '#FFD700',
-                background: order.paymentStatus === 'paid' ? 'rgba(46,204,113,0.1)' : 'rgba(255,215,0,0.1)',
+                color: order.paymentStatus === 'paid' ? '#2ECC71' : order.paymentStatus === 'pending_verification' ? '#FFD700' : '#FF4757',
+                background: order.paymentStatus === 'paid' ? 'rgba(46,204,113,0.1)' : order.paymentStatus === 'pending_verification' ? 'rgba(255,215,0,0.1)' : 'rgba(255,71,87,0.1)',
               }}
             >
-              {order.paymentStatus === 'paid' ? '💳 Paid Online' : '💵 Pay on Delivery'}
+              {order.paymentStatus === 'paid' ? '💳 Paid Online' : order.paymentStatus === 'pending_verification' ? '⏳ Verifying Payment' : order.paymentStatus === 'failed' ? '❌ Payment Failed' : '💵 Pay on Delivery'}
             </div>
           </div>
         </div>
@@ -185,7 +186,7 @@ export default function OrderDetailPage() {
           <div className="order-bill">
             <div className="order-bill-row">
               <span>Subtotal</span>
-              <span>₹{order.totalAmount - order.taxAmount - order.deliveryFee}</span>
+              <span>₹{order.totalAmount - order.taxAmount - order.deliveryFee + (order.discountAmount || 0)}</span>
             </div>
             <div className="order-bill-row">
               <span>GST (5%)</span>
@@ -197,6 +198,12 @@ export default function OrderDetailPage() {
                 <span>₹{order.deliveryFee}</span>
               </div>
             )}
+            {(order.discountAmount || 0) > 0 && (
+              <div className="order-bill-row" style={{ color: '#2ecc71' }}>
+                <span>Discount {order.appliedPromoCode ? `(${order.appliedPromoCode})` : ''}</span>
+                <span>-₹{order.discountAmount}</span>
+              </div>
+            )}
             <div className="order-bill-divider" />
             <div className="order-bill-row order-bill-total">
               <span>Total</span>
@@ -204,6 +211,22 @@ export default function OrderDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Payment Verification Banner ── */}
+        {order.paymentStatus === 'pending_verification' && (
+          <div className="card glass" style={{ border: '1px solid #FFD700', background: 'rgba(255, 215, 0, 0.05)', marginBottom: 'var(--space-lg)' }}>
+            <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+              <span style={{ fontSize: '32px' }}>⏳</span>
+              <div>
+                <h4 style={{ color: '#FFD700', marginBottom: '4px' }}>Payment Verification Pending</h4>
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  We've received your payment reference. Our team is verifying the transaction and will confirm your order shortly.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Delivery / Dine-In Info */}
         {(order.deliveryAddress || order.specialInstructions) && (

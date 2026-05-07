@@ -6,7 +6,7 @@ export interface IUser extends Document {
   password: string;
   phone: string;
   address: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'kitchen' | 'delivery';
   isBlocked: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -37,7 +37,7 @@ const UserSchema: Schema<IUser> = new Schema(
     address: { type: String, trim: true, default: '' },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'admin', 'kitchen', 'delivery'],
       default: 'user',
     },
     isBlocked: {

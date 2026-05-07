@@ -52,7 +52,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     res.cookie('auth_token', token, cookieOptions);
     res.status(201).json({
       success: true,
-      message: 'Account created successfully! Welcome to Premacha Vada!',
+      message: 'Account created successfully! Welcome to Premacha Wada!',
       user: {
         id: user._id.toString(),
         name: user.name,

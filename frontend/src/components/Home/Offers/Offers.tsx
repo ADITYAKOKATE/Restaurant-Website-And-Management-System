@@ -1,13 +1,40 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import styles from './Offers.module.css';
 
-const offers = [
-  { title: 'Weekend Combo', text: 'Perfect for family dinners and relaxed celebrations.', tag: 'Popular' },
-  { title: 'Family Pack', text: 'Generous portions for a warm shared dining experience.', tag: 'Value' },
-  { title: 'Festival Special', text: 'Seasonal dishes curated for joyful festive gatherings.', tag: 'Limited' },
-  { title: 'Biryani Offer', text: 'A premium rice feast with rich spices and aroma.', tag: 'Hot Deal' },
-];
+interface Offer {
+  _id: string;
+  title: string;
+  description: string;
+  tag?: string;
+  discountCode?: string;
+}
 
 export default function Offers() {
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const res = await fetch('/api/offers');
+        if (res.ok) {
+          const data = await res.json();
+          setOffers(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch offers', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOffers();
+  }, []);
+
+  if (loading) return null;
+  if (offers.length === 0) return null;
+
   return (
     <section className={`section ${styles.section}`} aria-labelledby="special-offers-heading">
       <div className={styles.container}>
@@ -18,10 +45,16 @@ export default function Offers() {
 
         <div className={styles.grid}>
           {offers.map((offer) => (
-            <article key={offer.title} className={styles.card}>
-              <span className={styles.tag}>{offer.tag}</span>
+            <article key={offer._id} className={styles.card}>
+              {offer.tag && <span className={styles.tag}>{offer.tag}</span>}
               <h3>{offer.title}</h3>
-              <p>{offer.text}</p>
+              <p>{offer.description}</p>
+              {offer.discountCode && (
+                <div style={{ marginTop: '1rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px dashed var(--primary)', borderRadius: '4px', display: 'inline-block' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Use Code: </span>
+                  <strong style={{ color: 'var(--primary)', letterSpacing: '1px' }}>{offer.discountCode}</strong>
+                </div>
+              )}
             </article>
           ))}
         </div>

@@ -74,16 +74,9 @@ export default function AdminSettingsPanel() {
         </article>
 
         <article className={styles.settingsCard}>
-          <p className={styles.settingsEyebrow}>Kitchen Display</p>
-          <h3 className={styles.settingsTitle}>Fulfilment mode</h3>
-          <div className={styles.filterRow}>
-            <button type="button" className={settings.kitchenDisplayMode === 'full' ? styles.primaryButton : styles.ghostButton} onClick={() => setSettings((current) => ({ ...current, kitchenDisplayMode: 'full' }))}>
-              Full
-            </button>
-            <button type="button" className={settings.kitchenDisplayMode === 'compact' ? styles.primaryButton : styles.ghostButton} onClick={() => setSettings((current) => ({ ...current, kitchenDisplayMode: 'compact' }))}>
-              Compact
-            </button>
-          </div>
+          <p className={styles.settingsEyebrow}>Preparation Time</p>
+          <h3 className={styles.settingsTitle}>{settings.estimatedPrepTime} mins</h3>
+          <input className={styles.textInput} type="number" min="5" max="120" value={settings.estimatedPrepTime} onChange={(event) => setSettings((current) => ({ ...current, estimatedPrepTime: Number(event.target.value) }))} />
         </article>
 
         <article className={styles.settingsCard}>

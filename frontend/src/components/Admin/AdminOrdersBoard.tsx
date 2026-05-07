@@ -2,56 +2,91 @@
 
 import { useMemo, useState } from 'react';
 import { AdminBadge, AdminEmptyState, AdminSectionHeader } from './AdminUi';
-import { updateAdminOrderStatus } from './adminApi';
-import { AdminOrderRecord, AdminOrderStatus } from './adminTypes';
-import { formatCurrency, formatShortDateTime, getBoardStatus, getNextWorkflowStatus, getPaymentLabel, getStatusLabel, getStatusTone } from './adminUtils';
+import { acceptAdminOrder, cancelAdminOrder, verifyAdminPayment } from './adminApi';
+import { AdminOrderRecord } from './adminTypes';
+import { formatCurrency, formatShortDateTime, getPaymentLabel, getStatusLabel, getStatusTone } from './adminUtils';
 import styles from './Admin.module.css';
 import { useAdminOrdersData } from './useAdminOrdersData';
 
-type BoardKey = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered';
+type BoardKey = 'pending' | 'verify' | 'confirmed' | 'cancelled';
 
 const columns: Array<{ key: BoardKey; title: string; helper: string }> = [
-  { key: 'pending', title: 'Pending', helper: 'New tickets waiting for confirmation.' },
+  { key: 'pending', title: 'Pending Review', helper: 'New orders waiting for confirmation.' },
+  { key: 'verify', title: 'Verify Payment', helper: 'Check UPI UTR for online payments.' },
   { key: 'confirmed', title: 'Confirmed', helper: 'Accepted and queued for kitchen prep.' },
-  { key: 'preparing', title: 'Preparing', helper: 'Kitchen is actively working on these orders.' },
-  { key: 'ready', title: 'Ready', helper: 'Ready for counter pickup or dispatch.' },
-  { key: 'delivered', title: 'Delivered', helper: 'Completed orders closed by staff.' },
+  { key: 'cancelled', title: 'Cancelled', helper: 'Rejected or cancelled orders.' },
 ];
 
 export default function AdminOrdersBoard() {
   const { orders, loading, error, lastUpdated, refresh, setOrders } = useAdminOrdersData(10000);
-  const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [activeDropKey, setActiveDropKey] = useState<AdminOrderStatus | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
-    type BoardKey = (typeof columns)[number]['key'];
     const initialBoard: Record<BoardKey, AdminOrderRecord[]> = {
       pending: [],
+      verify: [],
       confirmed: [],
-      preparing: [],
-      ready: [],
-      delivered: [],
+      cancelled: [],
     };
 
     return columns.reduce<Record<BoardKey, AdminOrderRecord[]>>((accumulator, column) => {
-      accumulator[column.key] = orders.filter((order) => getBoardStatus(order) === column.key);
+      if (column.key === 'pending') {
+        accumulator[column.key] = orders.filter((order) => order.status === 'pending' && order.paymentStatus !== 'pending_verification');
+      } else if (column.key === 'verify') {
+        accumulator[column.key] = orders.filter((order) => order.paymentStatus === 'pending_verification');
+      } else if (column.key === 'cancelled') {
+        accumulator[column.key] = orders.filter((order) => order.status === 'cancelled');
+      } else {
+        accumulator[column.key] = orders.filter((order) => 
+          ['confirmed', 'preparing', 'ready', 'out_for_delivery', 'delivered'].includes(order.status)
+        );
+      }
       return accumulator;
     }, initialBoard);
   }, [orders]);
 
-  const moveOrder = async (order: AdminOrderRecord, targetStatus: AdminOrderStatus) => {
-    const nextStatus = targetStatus === 'ready' && order.status === 'preparing' ? getNextWorkflowStatus(order) : targetStatus;
-    if (nextStatus === order.status) return;
-
-    const previousOrders = orders;
-    const updatedOrders = orders.map((entry) => (entry._id === order._id ? { ...entry, status: nextStatus } : entry));
-    setOrders(updatedOrders);
-
+  const handleAccept = async (order: AdminOrderRecord) => {
+    if (order.status !== 'pending') return;
+    setProcessingId(order._id);
     try {
-      await updateAdminOrderStatus(order._id, nextStatus);
-      await refresh();
-    } catch {
-      setOrders(previousOrders);
+      const updatedOrder = await acceptAdminOrder(order._id);
+      setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to accept order');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleCancel = async (order: AdminOrderRecord) => {
+    if (order.status !== 'pending' && order.status !== 'confirmed') return;
+    
+    const reason = window.prompt('Reason for cancellation?');
+    if (!reason) return;
+
+    setProcessingId(order._id);
+    try {
+      const updatedOrder = await cancelAdminOrder(order._id, reason);
+      setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to cancel order');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleVerifyPayment = async (order: AdminOrderRecord, action: 'approve' | 'reject') => {
+    setProcessingId(order._id);
+    try {
+      const updatedOrder = await verifyAdminPayment(order._id, action);
+      setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to verify payment');
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -59,13 +94,11 @@ export default function AdminOrdersBoard() {
     <>
       <section className={styles.panelCard}>
         <AdminSectionHeader
-          eyebrow="Live Order Management"
-          title="Kitchen command board"
-          description="Drag cards between lanes or use the action button to push orders through the kitchen workflow."
+          eyebrow="Order Intake"
+          title="Admin Order Board"
+          description="Review, accept, or reject incoming orders before they are sent to the kitchen."
           action={<AdminBadge tone="info">Polling every 10 seconds · {lastUpdated}</AdminBadge>}
         />
-
-        <div className={styles.boardDropHint}>Tip: drop a ticket on any lane to update its status instantly.</div>
 
         {error ? (
           <AdminEmptyState icon="⚠" title="Could not load live orders" description={error} action={<button className={styles.primaryButton} onClick={refresh}>Retry</button>} />
@@ -76,24 +109,7 @@ export default function AdminOrdersBoard() {
         ) : (
           <div className={styles.boardGrid}>
             {columns.map((column) => (
-              <section
-                key={column.key}
-                className={`${styles.boardColumn} ${activeDropKey === column.key ? styles.boardColumnActive : ''}`}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  setActiveDropKey(column.key);
-                }}
-                onDragLeave={() => setActiveDropKey(null)}
-                onDrop={async (event) => {
-                  event.preventDefault();
-                  setActiveDropKey(null);
-                  const orderId = event.dataTransfer.getData('text/plain');
-                  const order = orders.find((entry) => entry._id === orderId);
-                  if (order) {
-                    await moveOrder(order, column.key);
-                  }
-                }}
-              >
+              <section key={column.key} className={styles.boardColumn}>
                 <div className={styles.boardColumnHeader}>
                   <div>
                     <p className={styles.boardEyebrow}>{column.key}</p>
@@ -105,34 +121,31 @@ export default function AdminOrdersBoard() {
 
                 <div className={styles.boardList}>
                   {grouped[column.key].map((order) => {
-                    const nextStatus = getNextWorkflowStatus(order);
-
                     return (
-                      <article
-                        key={order._id}
-                        className={`${styles.orderCard} ${draggedId === order._id ? styles.orderDragging : ''}`}
-                        draggable
-                        onDragStart={(event) => {
-                          setDraggedId(order._id);
-                          event.dataTransfer.setData('text/plain', order._id);
-                          event.dataTransfer.effectAllowed = 'move';
-                        }}
-                        onDragEnd={() => {
-                          setDraggedId(null);
-                          setActiveDropKey(null);
-                        }}
-                      >
+                      <article key={order._id} className={styles.orderCard}>
                         <div className={styles.orderMeta}>
                           <div>
                             <div className={styles.orderToken}>#{order.tokenNumber}</div>
                             <p className={styles.orderItemText}>{order.user?.name || 'Guest'} · {formatShortDateTime(order.createdAt)}</p>
+                            <p className={styles.orderItemText} style={{ marginTop: 4 }}>📞 {order.user?.phone || 'No phone'}</p>
                           </div>
                           <AdminBadge tone={getStatusTone(order.status) as any}>{getStatusLabel(order.status)}</AdminBadge>
                         </div>
 
+                        {order.deliveryAddress && (
+                          <div style={{ padding: '8px', background: 'var(--surface-sunken)', borderRadius: '6px', margin: '12px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            📍 {order.deliveryAddress}
+                          </div>
+                        )}
+
                         <div className={styles.orderCustomerRow}>
                           <span className={styles.subtlePill}>{order.items.length} items</span>
                           <span className={styles.subtlePill}>{getPaymentLabel(order.paymentMethod)}</span>
+                          {order.paymentReferenceId && (
+                            <span className={styles.subtlePill} style={{ border: '1px dashed var(--primary)', color: 'var(--primary)' }}>
+                              UTR: {order.paymentReferenceId}
+                            </span>
+                          )}
                         </div>
 
                         <div className={styles.orderItemsList}>
@@ -152,9 +165,34 @@ export default function AdminOrdersBoard() {
                           <strong>{formatCurrency(order.totalAmount)}</strong>
                           <div className={styles.boardActions}>
                             <AdminBadge tone={order.paymentStatus === 'paid' ? 'success' : 'warning'}>{order.paymentStatus}</AdminBadge>
-                            <button className={styles.primaryButton} onClick={() => moveOrder(order, nextStatus)}>
-                              {nextStatus === order.status ? 'Hold' : `To ${getStatusLabel(nextStatus)}`}
-                            </button>
+                            
+                            {order.paymentStatus === 'pending_verification' && (
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className={styles.ghostButton} disabled={processingId === order._id} onClick={() => handleVerifyPayment(order, 'reject')}>
+                                  Reject
+                                </button>
+                                <button className={styles.primaryButton} disabled={processingId === order._id} onClick={() => handleVerifyPayment(order, 'approve')}>
+                                  Confirm
+                                </button>
+                              </div>
+                            )}
+
+                            {order.status === 'pending' && order.paymentStatus !== 'pending_verification' && (
+                              <>
+                                <button className={styles.ghostButton} disabled={processingId === order._id} onClick={() => handleCancel(order)}>
+                                  Reject
+                                </button>
+                                <button className={styles.primaryButton} disabled={processingId === order._id} onClick={() => handleAccept(order)}>
+                                  Accept Order
+                                </button>
+                              </>
+                            )}
+
+                            {order.status === 'confirmed' && (
+                              <button className={styles.ghostButton} disabled={processingId === order._id} onClick={() => handleCancel(order)}>
+                                Cancel
+                              </button>
+                            )}
                           </div>
                         </div>
                       </article>

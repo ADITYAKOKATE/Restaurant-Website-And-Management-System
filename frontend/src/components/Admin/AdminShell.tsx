@@ -35,6 +35,11 @@ export default function AdminShell({
       subtitle: 'Create, update, and control availability of menu items.',
     },
     {
+      path: '/admin/offers',
+      title: 'Offers & Combos',
+      subtitle: 'Manage promotions, discount codes, and special combos.',
+    },
+    {
       path: '/admin/users',
       title: 'User Manager',
       subtitle: 'Manage roles, account status, and customer access.',

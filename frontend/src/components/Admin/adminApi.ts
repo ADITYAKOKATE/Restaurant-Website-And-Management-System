@@ -1,4 +1,4 @@
-import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState } from './adminTypes';
+import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState, AdminOfferRecord } from './adminTypes';
 
 const fetchOptions: RequestInit = {
   credentials: 'include',
@@ -13,7 +13,7 @@ type AdminSettingsApiPayload = {
   minimumOrder: number;
   taxRate: number;
   onlinePaymentsEnabled: boolean;
-  kitchenDisplayMode: 'full' | 'compact';
+  estimatedPrepTime: number;
 };
 
 function mapSettingsFromApi(payload: AdminSettingsApiPayload): AdminSettingsState {
@@ -23,7 +23,7 @@ function mapSettingsFromApi(payload: AdminSettingsApiPayload): AdminSettingsStat
     minimumOrderAmount: Number(payload.minimumOrder) || 0,
     taxRate: Number(payload.taxRate) || 0,
     allowOnlinePayments: payload.onlinePaymentsEnabled,
-    kitchenDisplayMode: payload.kitchenDisplayMode,
+    estimatedPrepTime: Number(payload.estimatedPrepTime) || 30,
   };
 }
 
@@ -34,7 +34,7 @@ function mapSettingsToApi(settings: AdminSettingsState): AdminSettingsApiPayload
     minimumOrder: settings.minimumOrderAmount,
     taxRate: settings.taxRate,
     onlinePaymentsEnabled: settings.allowOnlinePayments,
-    kitchenDisplayMode: settings.kitchenDisplayMode,
+    estimatedPrepTime: settings.estimatedPrepTime,
   };
 }
 
@@ -49,18 +49,48 @@ export async function fetchAdminOrders(): Promise<AdminOrderRecord[]> {
   return response.json();
 }
 
-export async function updateAdminOrderStatus(orderId: string, status: AdminOrderRecord['status']) {
-  const response = await fetch(`/api/orders/admin/${orderId}/status`, {
+export async function acceptAdminOrder(orderId: string): Promise<AdminOrderRecord> {
+  const response = await fetch(`/api/orders/admin/${orderId}/accept`, {
     ...fetchOptions,
     method: 'PATCH',
-    body: JSON.stringify({ status }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to update order status');
+    throw new Error('Failed to accept order');
   }
 
-  return response.json();
+  const result = await response.json();
+  return result.order;
+}
+
+export async function cancelAdminOrder(orderId: string, reason: string): Promise<AdminOrderRecord> {
+  const response = await fetch(`/api/orders/admin/${orderId}/cancel`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ reason }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to cancel order');
+  }
+
+  const result = await response.json();
+  return result.order;
+}
+
+export async function verifyAdminPayment(orderId: string, action: 'approve' | 'reject'): Promise<AdminOrderRecord> {
+  const response = await fetch(`/api/orders/admin/${orderId}/verify-payment`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ action }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to verify payment');
+  }
+
+  const result = await response.json();
+  return result.order;
 }
 
 // ─────────────────────────────────────────────
@@ -129,7 +159,7 @@ export async function fetchAdminUsers(): Promise<AdminUserRecord[]> {
   return response.json();
 }
 
-export async function updateAdminUserRole(userId: string, role: 'user' | 'admin'): Promise<AdminUserRecord> {
+export async function updateAdminUserRole(userId: string, role: 'user' | 'admin' | 'kitchen' | 'delivery'): Promise<AdminUserRecord> {
   const response = await fetch(`/api/users/${userId}/role`, {
     ...fetchOptions,
     method: 'PUT',
@@ -196,4 +226,57 @@ export async function saveAdminSettings(settings: AdminSettingsState): Promise<A
 
   const result = await response.json();
   return mapSettingsFromApi(result.settings as AdminSettingsApiPayload);
+}
+
+// ─────────────────────────────────────────────
+// OFFER APIs
+// ─────────────────────────────────────────────
+export async function fetchAdminOffers(): Promise<AdminOfferRecord[]> {
+  const response = await fetch('/api/offers/all', { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to load offers');
+  }
+  return response.json();
+}
+
+export async function createAdminOffer(offer: Omit<AdminOfferRecord, '_id'>): Promise<AdminOfferRecord> {
+  const response = await fetch('/api/offers', {
+    ...fetchOptions,
+    method: 'POST',
+    body: JSON.stringify(offer),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create offer');
+  }
+
+  return response.json();
+}
+
+export async function updateAdminOffer(
+  offerId: string,
+  updates: Partial<AdminOfferRecord>
+): Promise<AdminOfferRecord> {
+  const response = await fetch(`/api/offers/${offerId}`, {
+    ...fetchOptions,
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update offer');
+  }
+
+  return response.json();
+}
+
+export async function deleteAdminOffer(offerId: string): Promise<void> {
+  const response = await fetch(`/api/offers/${offerId}`, {
+    ...fetchOptions,
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete offer');
+  }
 }

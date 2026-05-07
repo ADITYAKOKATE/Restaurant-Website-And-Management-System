@@ -123,12 +123,8 @@ export function getPaymentMix(orders: AdminOrderRecord[]) {
 }
 
 export function getOrderTypeMix(orders: AdminOrderRecord[]) {
-  const dineIn = orders.filter((order) => order.orderType === 'dine_in').length;
-  const delivery = orders.length - dineIn;
-
   return [
-    { name: 'Dine-In', value: dineIn },
-    { name: 'Delivery', value: delivery },
+    { name: 'Delivery', value: orders.length },
   ];
 }
 

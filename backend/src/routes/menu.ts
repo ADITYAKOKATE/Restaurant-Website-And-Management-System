@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import MenuItem from '../models/MenuItem';
+import { requireAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
 
 // @route   GET /api/menu
-// @desc    Get all menu items
+// @desc    Get all available menu items
 // @access  Public
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -17,9 +18,9 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // @route   GET /api/menu/admin/all
-// @desc    Get all menu items (including unavailable) - Admin only
+// @desc    Get all menu items including unavailable — Admin only
 // @access  Private/Admin
-router.get('/admin/all', async (req: Request, res: Response) => {
+router.get('/admin/all', requireAdmin, async (req: Request, res: Response) => {
   try {
     const items = await MenuItem.find().sort({ category: 1, name: 1 });
     res.json(items);
@@ -30,9 +31,9 @@ router.get('/admin/all', async (req: Request, res: Response) => {
 });
 
 // @route   POST /api/menu
-// @desc    Create new menu item - Admin only
+// @desc    Create new menu item — Admin only
 // @access  Private/Admin
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireAdmin, async (req: Request, res: Response) => {
   try {
     const {
       name,
@@ -48,7 +49,6 @@ router.post('/', async (req: Request, res: Response) => {
       comboGroup,
     } = req.body;
 
-    // Validation
     if (!name || !category || !price) {
       res.status(400).json({ error: 'Name, category, and price are required' });
       return;
@@ -76,14 +76,13 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // @route   PATCH /api/menu/:id
-// @desc    Update menu item - Admin only
+// @desc    Update menu item — Admin only
 // @access  Private/Admin
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    // Sanitize input
     const sanitized: any = {};
     if (updateData.name) sanitized.name = updateData.name.trim();
     if (updateData.category) sanitized.category = updateData.category.trim();
@@ -98,7 +97,6 @@ router.patch('/:id', async (req: Request, res: Response) => {
     if (updateData.comboGroup !== undefined) sanitized.comboGroup = updateData.comboGroup.trim();
 
     const updatedItem = await MenuItem.findByIdAndUpdate(id, sanitized, { new: true });
-
     if (!updatedItem) {
       res.status(404).json({ error: 'Menu item not found' });
       return;
@@ -112,18 +110,16 @@ router.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // @route   DELETE /api/menu/:id
-// @desc    Delete menu item - Admin only
+// @desc    Delete menu item — Admin only
 // @access  Private/Admin
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', requireAdmin, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const deletedItem = await MenuItem.findByIdAndDelete(id);
-
     if (!deletedItem) {
       res.status(404).json({ error: 'Menu item not found' });
       return;
     }
-
     res.json({ success: true, message: 'Menu item deleted' });
   } catch (err: any) {
     console.error('Delete menu item error:', err);

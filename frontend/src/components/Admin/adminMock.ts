@@ -39,5 +39,5 @@ export const defaultSettings: AdminSettingsState = {
   taxRate: 5,
   minimumOrderAmount: 150,
   allowOnlinePayments: true,
-  kitchenDisplayMode: 'full',
+  estimatedPrepTime: 30,
 };

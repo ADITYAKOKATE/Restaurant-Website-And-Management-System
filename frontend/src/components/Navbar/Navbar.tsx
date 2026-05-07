@@ -40,7 +40,7 @@ export default function Navbar() {
           <span className="navbar__logo-icon">🍛</span>
           <div className="navbar__logo-text">
             <span className="navbar__logo-name">Premacha</span>
-            <span className="navbar__logo-sub">Vada</span>
+            <span className="navbar__logo-sub">Wada</span>
           </div>
         </Link>
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import PaymentQRModal from '@/components/PaymentQRModal/PaymentQRModal';
 import './cart.css';
 
 export default function CartPage() {
@@ -13,23 +14,73 @@ export default function CartPage() {
   const { cartItems, cartTotal, removeFromCart, updateQuantity, isLoading, fetchCart } = useCart();
 
   const [showCheckout, setShowCheckout] = useState(false);
-  const [orderType, setOrderType] = useState<'delivery' | 'dine_in'>('delivery');
+  const [orderType] = useState<'delivery'>('delivery');
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [phone, setPhone] = useState('');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState('');
+  const [showQrModal, setShowQrModal] = useState(false);
+  
+  // Promo code states
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountAmount: number; title: string } | null>(null);
+  const [promoMessage, setPromoMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
   const taxAmount = Math.round(cartTotal * 0.05);
   const deliveryFee = orderType === 'delivery' ? 40 : 0;
-  const grandTotal = cartTotal + taxAmount + deliveryFee;
+  const discountAmount = appliedPromo?.discountAmount || 0;
+  const grandTotal = Math.max(0, cartTotal + taxAmount + deliveryFee - discountAmount);
 
-  const handlePlaceOrder = async () => {
-    if (orderType === 'delivery' && !deliveryAddress.trim()) {
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoMessage(null);
+    try {
+      const res = await fetch('/api/offers/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promoInput, cartTotal }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAppliedPromo({
+          code: data.code,
+          discountAmount: data.discountAmount,
+          title: data.title
+        });
+        setPromoMessage({ text: `🎉 ${data.title} applied! Saved ₹${data.discountAmount}`, type: 'success' });
+      } else {
+        setAppliedPromo(null);
+        setPromoMessage({ text: data.message || 'Invalid promo code', type: 'error' });
+      }
+    } catch {
+      setPromoMessage({ text: 'Error applying promo code', type: 'error' });
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoMessage(null);
+  };
+
+  const handlePlaceOrder = async (referenceId?: string) => {
+    if (!deliveryAddress.trim()) {
       setOrderError('Please enter your delivery address.');
       return;
     }
+
+    // If online payment and no referenceId, show QR modal first
+    if (paymentMethod === 'online' && !referenceId) {
+      setShowQrModal(true);
+      return;
+    }
+
     setOrderError('');
     setIsPlacingOrder(true);
 
@@ -37,11 +88,20 @@ export default function CartPage() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderType, paymentMethod, deliveryAddress, phone, specialInstructions }),
+        body: JSON.stringify({ 
+          orderType, 
+          paymentMethod, 
+          deliveryAddress, 
+          phone, 
+          specialInstructions,
+          promoCode: appliedPromo?.code,
+          paymentReferenceId: referenceId
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         await fetchCart(); // Refresh cart (will be empty now)
+        setShowQrModal(false);
         router.push(`/orders?new=${data.order.tokenNumber}&method=${paymentMethod}`);
       } else {
         setOrderError(data.message || 'Failed to place order.');
@@ -139,13 +199,56 @@ export default function CartPage() {
                   </div>
                   <div className="cart-summary-row">
                     <span>Delivery Fee</span>
-                    <span>{orderType === 'delivery' ? '₹40' : <span style={{ color: 'var(--accent)' }}>FREE (Dine-In)</span>}</span>
+                    <span>₹40</span>
                   </div>
+                  {appliedPromo && (
+                    <div className="cart-summary-row" style={{ color: '#2ecc71' }}>
+                      <span>Discount ({appliedPromo.code})</span>
+                      <span>-₹{appliedPromo.discountAmount}</span>
+                    </div>
+                  )}
                   <div className="cart-summary-divider" />
                   <div className="cart-summary-row cart-summary-total">
                     <span>Total</span>
                     <span style={{ color: 'var(--secondary)' }}>₹{grandTotal}</span>
                   </div>
+                </div>
+
+                {/* Promo Code Input */}
+                <div style={{ marginTop: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+                  {appliedPromo ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(46, 204, 113, 0.1)', border: '1px solid #2ecc71', padding: '8px 12px', borderRadius: '4px' }}>
+                      <div>
+                        <strong style={{ color: '#2ecc71', fontSize: '14px', display: 'block' }}>{appliedPromo.code} Applied</strong>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{appliedPromo.title}</span>
+                      </div>
+                      <button onClick={removePromo} style={{ background: 'none', border: 'none', color: '#ff4757', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Remove</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Enter Promo Code" 
+                        className="form-input" 
+                        style={{ flex: 1, textTransform: 'uppercase' }}
+                        value={promoInput}
+                        onChange={(e) => setPromoInput(e.target.value)}
+                        disabled={isApplyingPromo}
+                      />
+                      <button 
+                        className="btn btn-secondary" 
+                        onClick={handleApplyPromo}
+                        disabled={!promoInput.trim() || isApplyingPromo}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+                  {promoMessage && (
+                    <p style={{ marginTop: '8px', fontSize: '13px', color: promoMessage.type === 'error' ? '#ff4757' : '#2ecc71' }}>
+                      {promoMessage.text}
+                    </p>
+                  )}
                 </div>
 
                 {!showCheckout ? (
@@ -155,47 +258,26 @@ export default function CartPage() {
                 ) : (
                   <div className="checkout-form">
 
-                    {/* Order Type */}
-                    <div className="checkout-section">
-                      <label className="checkout-label">Order Type</label>
-                      <div className="toggle-group">
-                        <button
-                          className={`toggle-btn ${orderType === 'delivery' ? 'toggle-btn--active' : ''}`}
-                          onClick={() => setOrderType('delivery')}
-                        >
-                          🚴 Delivery
-                        </button>
-                        <button
-                          className={`toggle-btn ${orderType === 'dine_in' ? 'toggle-btn--active' : ''}`}
-                          onClick={() => setOrderType('dine_in')}
-                        >
-                          🍽️ Dine-In
-                        </button>
-                      </div>
-                    </div>
-
                     {/* Delivery Fields */}
-                    {orderType === 'delivery' && (
-                      <div className="checkout-section">
-                        <label className="checkout-label">Delivery Address *</label>
-                        <textarea
-                          className="form-input"
-                          rows={3}
-                          placeholder="Enter your full delivery address..."
-                          value={deliveryAddress}
-                          onChange={(e) => setDeliveryAddress(e.target.value)}
-                          style={{ resize: 'vertical' }}
-                        />
-                        <label className="checkout-label" style={{ marginTop: 'var(--space-sm)' }}>Phone Number</label>
-                        <input
-                          type="tel"
-                          className="form-input"
-                          placeholder="+91 XXXXX XXXXX"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                        />
-                      </div>
-                    )}
+                    <div className="checkout-section">
+                      <label className="checkout-label">Delivery Address *</label>
+                      <textarea
+                        className="form-input"
+                        rows={3}
+                        placeholder="Enter your full delivery address..."
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        style={{ resize: 'vertical' }}
+                      />
+                      <label className="checkout-label" style={{ marginTop: 'var(--space-sm)' }}>Phone Number *</label>
+                      <input
+                        type="tel"
+                        className="form-input"
+                        placeholder="+91 XXXXX XXXXX"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
+                    </div>
 
                     {/* Payment Method */}
                     <div className="checkout-section">
@@ -244,7 +326,7 @@ export default function CartPage() {
                     <button
                       className="btn btn-primary"
                       style={{ width: '100%' }}
-                      onClick={handlePlaceOrder}
+                      onClick={() => handlePlaceOrder()}
                       disabled={isPlacingOrder}
                     >
                       {isPlacingOrder ? 'Placing Order...' : paymentMethod === 'online' ? '💳 Pay & Place Order' : '✅ Place Order (Pay Later)'}
@@ -260,20 +342,20 @@ export default function CartPage() {
                 )}
               </div>
 
-              {/* Dine-In Tip */}
-              {orderType === 'dine_in' && showCheckout && (
-                <div className="dine-in-tip card">
-                  <span style={{ fontSize: '28px' }}>🏠</span>
-                  <div>
-                    <p style={{ fontWeight: 600 }}>Dining In?</p>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>After placing your order, show your Token Number at the counter to collect your food!</p>
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
         )}
       </div>
+
+      {showQrModal && (
+        <PaymentQRModal
+          totalAmount={grandTotal}
+          isProcessing={isPlacingOrder}
+          onCancel={() => setShowQrModal(false)}
+          onConfirm={(utr) => handlePlaceOrder(utr)}
+        />
+      )}
     </main>
   );
 }

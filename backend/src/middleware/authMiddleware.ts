@@ -35,3 +35,25 @@ export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction
     next();
   });
 }
+
+/** Middleware: kitchen staff or admin */
+export function requireKitchen(req: AuthRequest, res: Response, next: NextFunction): void {
+  requireAuth(req, res, () => {
+    if (req.user?.role !== 'kitchen' && req.user?.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Kitchen staff access required.' });
+      return;
+    }
+    next();
+  });
+}
+
+/** Middleware: delivery staff or admin */
+export function requireDelivery(req: AuthRequest, res: Response, next: NextFunction): void {
+  requireAuth(req, res, () => {
+    if (req.user?.role !== 'delivery' && req.user?.role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Delivery staff access required.' });
+      return;
+    }
+    next();
+  });
+}

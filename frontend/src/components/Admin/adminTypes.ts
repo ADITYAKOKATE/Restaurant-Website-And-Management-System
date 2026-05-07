@@ -1,12 +1,12 @@
 export type AdminOrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
 export type AdminPaymentMethod = 'online' | 'cod';
-export type AdminOrderType = 'dine_in' | 'delivery';
+export type AdminOrderType = 'delivery';
 
 export interface AdminUserRecord {
   _id: string;
   name: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'user' | 'kitchen' | 'delivery';
   isBlocked: boolean;
   phone?: string;
   createdAt: string;
@@ -50,10 +50,23 @@ export interface AdminOrderRecord {
   orderType: AdminOrderType;
   status: AdminOrderStatus;
   paymentMethod: AdminPaymentMethod;
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
+  paymentReferenceId?: string;
   tokenNumber: number;
   deliveryAddress: string;
+  phone?: string;
   specialInstructions: string;
+  assignedTo?: {
+    _id: string;
+    name: string;
+    phone?: string;
+  } | null;
+  statusHistory?: {
+    status: string;
+    changedAt: string;
+    note?: string;
+  }[];
+  cancellationReason?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -64,5 +77,18 @@ export interface AdminSettingsState {
   taxRate: number;
   minimumOrderAmount: number;
   allowOnlinePayments: boolean;
-  kitchenDisplayMode: 'full' | 'compact';
+  estimatedPrepTime: number;
+}
+
+export interface AdminOfferRecord {
+  _id: string;
+  title: string;
+  description: string;
+  tag?: string;
+  image?: string;
+  isActive: boolean;
+  discountCode?: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  minimumOrderValue: number;
 }

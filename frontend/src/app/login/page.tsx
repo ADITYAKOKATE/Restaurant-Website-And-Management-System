@@ -51,7 +51,15 @@ export default function LoginPage() {
 
       if (data.success) {
         login(data.user);
-        router.push('/');
+        if (data.user.role === 'admin') {
+          router.push('/admin');
+        } else if (data.user.role === 'kitchen') {
+          router.push('/kitchen');
+        } else if (data.user.role === 'delivery') {
+          router.push('/delivery');
+        } else {
+          router.push('/');
+        }
       } else {
         setApiError(data.message || 'Login failed. Please try again.');
       }
@@ -76,7 +84,7 @@ export default function LoginPage() {
             <div className="auth-panel__icon">🍛</div>
             <h2 className="auth-panel__title">Welcome Back!</h2>
             <p className="auth-panel__desc">
-              Log in to continue enjoying the authentic taste of Premacha Vada. Your cravings are just a click away!
+              Log in to continue enjoying the authentic taste of Premacha Wada. Your cravings are just a click away!
             </p>
             <ul className="auth-panel__perks">
               <li><span className="auth-panel__perk-icon">🛒</span> Access your saved cart</li>

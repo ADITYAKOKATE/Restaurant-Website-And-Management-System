@@ -1,24 +1,16 @@
 import { Router, Request, Response } from 'express';
+import { requireAdmin } from '../middleware/authMiddleware';
+import { getOrCreateSettings } from '../models/Settings';
 
 const router = Router();
 
-// In-memory settings store (replace with MongoDB collection in production)
-let storeSettings = {
-  storeOpen: true,
-  deliveryCharge: 50,
-  minimumOrder: 200,
-  taxRate: 5,
-  onlinePaymentsEnabled: true,
-  kitchenDisplayMode: 'full' as 'full' | 'compact',
-  updatedAt: new Date(),
-};
-
 // @route   GET /api/settings
-// @desc    Get store settings - Admin only
-// @access  Private/Admin
-router.get('/', (req: Request, res: Response) => {
+// @desc    Get store settings
+// @access  Public (so frontend can check store status before ordering)
+router.get('/', async (req: Request, res: Response) => {
   try {
-    res.json({ success: true, settings: storeSettings });
+    const settings = await getOrCreateSettings();
+    res.json({ success: true, settings });
   } catch (err: any) {
     console.error('Settings fetch error:', err);
     res.status(500).json({ error: 'Failed to fetch settings' });
@@ -26,9 +18,9 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // @route   PUT /api/settings
-// @desc    Update store settings - Admin only
+// @desc    Update store settings
 // @access  Private/Admin
-router.put('/', (req: Request, res: Response) => {
+router.put('/', requireAdmin, async (req: Request, res: Response) => {
   try {
     const {
       storeOpen,
@@ -36,21 +28,22 @@ router.put('/', (req: Request, res: Response) => {
       minimumOrder,
       taxRate,
       onlinePaymentsEnabled,
-      kitchenDisplayMode,
+      estimatedPrepTime,
     } = req.body;
 
-    // Update settings (only update provided fields)
-    if (storeOpen !== undefined) storeSettings.storeOpen = Boolean(storeOpen);
-    if (deliveryCharge !== undefined) storeSettings.deliveryCharge = Number(deliveryCharge);
-    if (minimumOrder !== undefined) storeSettings.minimumOrder = Number(minimumOrder);
-    if (taxRate !== undefined) storeSettings.taxRate = Number(taxRate);
-    if (onlinePaymentsEnabled !== undefined) storeSettings.onlinePaymentsEnabled = Boolean(onlinePaymentsEnabled);
-    if (kitchenDisplayMode !== undefined && ['full', 'compact'].includes(kitchenDisplayMode)) {
-      storeSettings.kitchenDisplayMode = kitchenDisplayMode;
-    }
-    storeSettings.updatedAt = new Date();
+    const settings = await getOrCreateSettings();
 
-    res.json({ success: true, settings: storeSettings });
+    // Update only provided fields
+    if (storeOpen !== undefined) settings.storeOpen = Boolean(storeOpen);
+    if (deliveryCharge !== undefined) settings.deliveryCharge = Number(deliveryCharge);
+    if (minimumOrder !== undefined) settings.minimumOrder = Number(minimumOrder);
+    if (taxRate !== undefined) settings.taxRate = Number(taxRate);
+    if (onlinePaymentsEnabled !== undefined) settings.onlinePaymentsEnabled = Boolean(onlinePaymentsEnabled);
+    if (estimatedPrepTime !== undefined) settings.estimatedPrepTime = Number(estimatedPrepTime);
+
+    await settings.save();
+
+    res.json({ success: true, settings });
   } catch (err: any) {
     console.error('Settings update error:', err);
     res.status(500).json({ error: 'Failed to update settings' });

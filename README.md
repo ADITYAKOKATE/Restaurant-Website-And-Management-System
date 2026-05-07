@@ -1,15 +1,15 @@
-# 🍛 Premacha Vada
+# 🍛 Premacha Wada
 
 > **Authentic Maharashtrian Street Food** — Full-Stack Restaurant Web Application
 
-A modern, production-grade online ordering platform for Premacha Vada, built with a decoupled Next.js frontend and Express.js backend.
+A modern, production-grade online ordering platform for Premacha Wada, built with a decoupled Next.js frontend and Express.js backend.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-premacha-vada/
+premacha-wada/
 │
 ├── frontend/                          # Next.js App (React 19, TypeScript)
 │   ├── src/
@@ -104,7 +104,7 @@ npm install
 Create a `.env` file in `backend/`:
 
 ```env
-MONGODB_URI=mongodb://localhost:27017/premacha-vada
+MONGODB_URI=mongodb://localhost:27017/premacha-wada
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 PORT=5000
 FRONTEND_URL=http://localhost:3000
@@ -214,4 +214,4 @@ npm run dev
 
 ---
 
-*Made with ❤️ in Pune — Premacha Vada 🍛*
+*Made with ❤️ in Pune — Premacha Wada 🍛*

@@ -1,0 +1,34 @@
+# ──────────────────────────────────────────────────────────────────
+# Render Blueprint — Premacha Wada Backend
+# Docs: https://render.com/docs/blueprint-spec
+# ──────────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: premacha-wada-backend
+    runtime: node
+    region: singapore       # closest to India
+    plan: free
+    rootDir: backend        # monorepo: backend lives in /backend
+
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: PORT
+        value: 5000
+
+      # Set these manually in the Render dashboard (sensitive):
+      - key: MONGODB_URI
+        sync: false         # Render will prompt you for this value
+
+      - key: JWT_SECRET
+        sync: false         # Render will prompt you for this value
+
+      # Your Vercel frontend URL (comma-separated if multiple):
+      - key: FRONTEND_URL
+        sync: false         # e.g. https://premacha-wada.vercel.app

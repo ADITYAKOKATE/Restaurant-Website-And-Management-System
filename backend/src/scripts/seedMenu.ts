@@ -3,13 +3,16 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
+import dns from 'dns';
+
+dns.setServers(['8.8.8.8']);
 import MenuItem from '../models/MenuItem';
 import User from '../models/User';
 
 // Load env variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/premacha-vada';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/premacha-wada';
 
 const getRelevantImage = (item: any) => {
   const textToSearch = `${item.name} ${item.category} ${item.subCategory}`.toLowerCase();

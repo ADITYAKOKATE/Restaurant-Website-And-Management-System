@@ -5,11 +5,11 @@ import { CartProvider } from '@/context/CartContext';
 import SiteChrome from '@/components/SiteChrome/SiteChrome';
 
 export const metadata: Metadata = {
-  title: 'Premacha Vada — Authentic Maharashtrian Street Food',
-  description: 'Order the freshest, most authentic Vada Pav and street food online. Premacha Vada brings the taste of Maharashtra\'s beloved street food right to your doorstep.',
-  keywords: 'vada pav, pune street food, maharashtrian street food, premacha vada, order food online',
+  title: 'Premacha Wada — Authentic Maharashtrian Street Food',
+  description: 'Order the freshest, most authentic Vada Pav and street food online. Premacha Wada brings the taste of Maharashtra\'s beloved street food right to your doorstep.',
+  keywords: 'vada pav, pune street food, maharashtrian street food, premacha wada, order food online',
   openGraph: {
-    title: 'Premacha Vada — Authentic Maharashtrian Street Food',
+    title: 'Premacha Wada — Authentic Maharashtrian Street Food',
     description: 'Order the freshest Vada Pav and street food online.',
     type: 'website',
   },
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <AuthProvider>
           <CartProvider>

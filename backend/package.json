@@ -1,12 +1,16 @@
 {
-  "name": "premacha-vada-backend",
+  "name": "premacha-wada-backend",
   "version": "1.0.0",
-  "description": "Express backend server for Premacha Vada restaurant",
+  "description": "Express backend server for Premacha Wada restaurant",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "seed": "npx ts-node src/scripts/seedMenu.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

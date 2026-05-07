@@ -19,10 +19,12 @@ interface Order {
   totalAmount: number;
   taxAmount: number;
   deliveryFee: number;
-  orderType: 'dine_in' | 'delivery';
+  discountAmount?: number;
+  appliedPromoCode?: string;
+  orderType: 'delivery';
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
   paymentMethod: 'online' | 'cod';
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
   tokenNumber: number;
   deliveryAddress: string;
   specialInstructions: string;
@@ -90,22 +92,22 @@ function OrdersContent() {
         {newToken && (
           <div className="order-success-banner">
             <div className="order-success-left">
-              <span className="order-success-emoji">🎉</span>
+              <span className="order-success-emoji">{newMethod === 'online' ? '⏳' : '🎉'}</span>
               <div>
                 <h3 className="order-success-title">
-                  {newMethod === 'online' ? 'Payment Successful! Order Confirmed!' : 'Order Placed Successfully!'}
+                  {newMethod === 'online' ? 'Payment Under Review! ⏳' : 'Pay on Delivery! 💵'}
                 </h3>
                 <p className="order-success-sub">
                   {newMethod === 'online'
-                    ? 'Your payment has been processed. Your food is being prepared!'
-                    : 'Your order is placed. Please pay when your food is delivered or at the counter.'}
+                    ? "We've received your payment reference. Our team is verifying it and your order will be confirmed shortly!"
+                    : 'Your order is placed! Please pay via Cash or UPI when our delivery hero arrives.'}
                 </p>
               </div>
             </div>
             <div className="order-token-highlight">
-              <p className="order-token-label">Your Token</p>
+              <p className="order-token-label">Order Token</p>
               <p className="order-token-number">#{newToken}</p>
-              <p className="order-token-hint">Show this at the counter</p>
+              <p className="order-token-hint">Track live status below</p>
             </div>
           </div>
         )}
@@ -143,7 +145,7 @@ function OrdersContent() {
                   <div className="order-card-header">
                     <div className="order-card-meta">
                       <div className="order-type-badge">
-                        {order.orderType === 'dine_in' ? '🍽️ Dine-In' : '🚴 Delivery'}
+                        🚴 Delivery
                       </div>
                       <span className="order-date">{date}</span>
                     </div>
@@ -165,11 +167,11 @@ function OrdersContent() {
                     <span
                       className="order-payment-badge"
                       style={{
-                        color: order.paymentStatus === 'paid' ? '#2ECC71' : '#FFD700',
-                        background: order.paymentStatus === 'paid' ? 'rgba(46,204,113,0.1)' : 'rgba(255,215,0,0.1)',
+                        color: order.paymentStatus === 'paid' ? '#2ECC71' : order.paymentStatus === 'pending_verification' ? '#FFD700' : order.paymentStatus === 'failed' ? '#FF4757' : '#FFD700',
+                        background: order.paymentStatus === 'paid' ? 'rgba(46,204,113,0.1)' : order.paymentStatus === 'pending_verification' ? 'rgba(255,215,0,0.1)' : order.paymentStatus === 'failed' ? 'rgba(255,71,87,0.1)' : 'rgba(255,215,0,0.1)',
                       }}
                     >
-                      {order.paymentStatus === 'paid' ? '💳 Paid' : '💵 Payment Pending'}
+                      {order.paymentStatus === 'paid' ? '💳 Paid' : order.paymentStatus === 'pending_verification' ? '⏳ Verifying' : order.paymentStatus === 'failed' ? '❌ Failed' : '💵 Payment Pending'}
                     </span>
                   </div>
 
@@ -194,10 +196,15 @@ function OrdersContent() {
                       <p className="order-instructions">📝 {order.specialInstructions}</p>
                     )}
                     <div className="order-total-row">
-                      <div style={{ display: 'flex', gap: 'var(--space-md)', color: 'var(--text-muted)', fontSize: '13px' }}>
-                        <span>Subtotal: ₹{order.totalAmount - order.taxAmount - order.deliveryFee}</span>
+                      <div style={{ display: 'flex', gap: 'var(--space-md)', color: 'var(--text-muted)', fontSize: '13px', flexWrap: 'wrap' }}>
+                        <span>Subtotal: ₹{order.totalAmount - order.taxAmount - order.deliveryFee + (order.discountAmount || 0)}</span>
                         <span>Tax: ₹{order.taxAmount}</span>
                         {order.deliveryFee > 0 && <span>Delivery: ₹{order.deliveryFee}</span>}
+                        {(order.discountAmount || 0) > 0 && (
+                          <span style={{ color: '#2ecc71', fontWeight: 'bold' }}>
+                            Discount: -₹{order.discountAmount} {order.appliedPromoCode ? `(${order.appliedPromoCode})` : ''}
+                          </span>
+                        )}
                       </div>
                       <div className="order-total-amount">
                         Total: ₹{order.totalAmount}

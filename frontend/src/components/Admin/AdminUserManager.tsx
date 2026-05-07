@@ -51,7 +51,7 @@ export default function AdminUserManager() {
     });
   }, [roleFilter, search, users]);
 
-  const roleOptions: Array<'All' | AdminUserRecord['role']> = ['All', 'admin', 'user'];
+  const roleOptions: Array<'All' | AdminUserRecord['role']> = ['All', 'admin', 'user', 'kitchen', 'delivery'];
 
   const scheduleAction = (action: UserAction) => setPendingAction(action);
 
@@ -64,19 +64,10 @@ export default function AdminUserManager() {
   };
 
   const actionHandlers = {
-    promote: async (user: AdminUserRecord) => {
+    changeRole: async (user: AdminUserRecord, newRole: AdminUserRecord['role']) => {
       setSavingId(user._id);
       try {
-        const updated = await updateAdminUserRole(user._id, 'admin');
-        replaceUser(updated);
-      } finally {
-        setSavingId('');
-      }
-    },
-    demote: async (user: AdminUserRecord) => {
-      setSavingId(user._id);
-      try {
-        const updated = await updateAdminUserRole(user._id, 'user');
+        const updated = await updateAdminUserRole(user._id, newRole);
         replaceUser(updated);
       } finally {
         setSavingId('');
@@ -163,7 +154,7 @@ export default function AdminUserManager() {
                     </td>
                     <td>
                       <div className={styles.badgeStack}>
-                        <AdminBadge tone={user.role === 'admin' ? 'promo' : 'muted'}>{user.role}</AdminBadge>
+                        <AdminBadge tone={user.role === 'admin' ? 'promo' : user.role === 'kitchen' ? 'warning' : user.role === 'delivery' ? 'info' : 'muted'}>{user.role}</AdminBadge>
                       </div>
                     </td>
                     <td>{formatLongDate(user.createdAt)}</td>
@@ -173,38 +164,26 @@ export default function AdminUserManager() {
                     <td>
                       <div className={styles.tableRow}>
                         {user.role !== 'admin' && (
-                          <button
-                            type="button"
+                          <select
                             className={styles.ghostButton}
+                            style={{ appearance: 'auto', paddingRight: 'var(--space-md)' }}
+                            value={user.role}
                             disabled={savingId === user._id}
-                            onClick={() =>
+                            onChange={(e) => {
+                              const newRole = e.target.value as AdminUserRecord['role'];
                               scheduleAction({
-                                title: 'Promote user to admin?',
-                                description: `${user.name} will gain admin access to the dashboard.`,
-                                confirmLabel: 'Promote',
-                                apply: async () => actionHandlers.promote(user),
-                              })
-                            }
+                                title: `Change role to ${newRole}?`,
+                                description: `${user.name} will be moved to the ${newRole} role.`,
+                                confirmLabel: 'Change Role',
+                                apply: async () => actionHandlers.changeRole(user, newRole),
+                              });
+                            }}
                           >
-                            Promote
-                          </button>
-                        )}
-                        {user.role === 'admin' && (
-                          <button
-                            type="button"
-                            className={styles.ghostButton}
-                            disabled={savingId === user._id}
-                            onClick={() =>
-                              scheduleAction({
-                                title: 'Demote admin to user?',
-                                description: `${user.name} will be reduced to standard user access.`,
-                                confirmLabel: 'Demote',
-                                apply: async () => actionHandlers.demote(user),
-                              })
-                            }
-                          >
-                            Demote
-                          </button>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                            <option value="kitchen">Kitchen</option>
+                            <option value="delivery">Delivery</option>
+                          </select>
                         )}
                         <button
                           type="button"

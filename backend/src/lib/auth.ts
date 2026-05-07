@@ -25,10 +25,12 @@ export function verifyToken(token: string): JWTPayload | null {
 }
 
 /** Cookie config for auth_token */
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms (for Express)
+  secure: isProduction,            // HTTPS-only in production
+  sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',  // cross-origin on Vercel+Render
+  maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms
   path: '/',
 };

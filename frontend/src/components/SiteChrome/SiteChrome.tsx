@@ -6,9 +6,9 @@ import Footer from '@/components/Footer/Footer';
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdminRoute = pathname.startsWith('/admin');
+  const isAppPortalRoute = pathname.startsWith('/admin') || pathname.startsWith('/kitchen') || pathname.startsWith('/delivery');
 
-  if (isAdminRoute) {
+  if (isAppPortalRoute) {
     return <>{children}</>;
   }
 

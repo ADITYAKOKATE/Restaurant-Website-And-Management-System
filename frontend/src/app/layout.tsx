@@ -5,15 +5,16 @@ import { CartProvider } from '@/context/CartContext';
 import SiteChrome from '@/components/SiteChrome/SiteChrome';
 
 export const metadata: Metadata = {
-  title: 'Premacha Wada — Authentic Maharashtrian Street Food',
-  description: 'Order the freshest, most authentic Vada Pav and street food online. Premacha Wada brings the taste of Maharashtra\'s beloved street food right to your doorstep.',
-  keywords: 'vada pav, pune street food, maharashtrian street food, premacha wada, order food online',
+  title: 'Premacha Wada — Authentic Maharashtrian Restaurant',
+  description: 'Order the freshest, most authentic dishes and Maharashtrian cuisine online. Premacha Wada brings the taste of Maharashtra\'s beloved flavors right to your doorstep.',
+  keywords: 'vada pav, pune restaurant, maharashtrian cuisine, premacha wada, order food online',
   openGraph: {
-    title: 'Premacha Wada — Authentic Maharashtrian Street Food',
-    description: 'Order the freshest Vada Pav and street food online.',
+    title: 'Premacha Wada — Authentic Maharashtrian Restaurant',
+    description: 'Order the freshest and Maharashtrian dishes online.',
     type: 'website',
   },
 };
+
 
 export default function RootLayout({
   children,

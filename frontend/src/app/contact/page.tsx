@@ -72,7 +72,7 @@ export default function ContactPage() {
                     <span>📧</span>
                     <div>
                       <strong>Email</strong>
-                      <p style={{ color: 'var(--text-secondary)' }}>hello@premachawada.com</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>premachawada1@gmail.com</p>
                     </div>
                   </li>
                   <li style={{ display: 'flex', gap: 'var(--space-sm)' }}>

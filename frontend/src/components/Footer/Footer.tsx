@@ -49,11 +49,11 @@ export default function Footer() {
           <div className="footer__col">
             <h4 className="footer__col-title">Menu Categories</h4>
             <ul className="footer__links">
-              <li><Link href="/menu?category=vada">Vada Pav</Link></li>
-              <li><Link href="/menu?category=combos">Combos</Link></li>
-              <li><Link href="/menu?category=snacks">Snacks</Link></li>
-              <li><Link href="/menu?category=drinks">Drinks</Link></li>
-              <li><Link href="/menu?category=desserts">Desserts</Link></li>
+              <li><Link href="/menu?category=thali">Spl. Thali</Link></li>
+              <li><Link href="/menu?category=raan">Chicken Raan</Link></li>
+              <li><Link href="/menu?category=wadi">Maharashtrian Wadi</Link></li>
+              <li><Link href="/menu?category=starter">Starters</Link></li>
+              <li><Link href="/menu?category=soup">Soups</Link></li>
             </ul>
           </div>
 
@@ -71,7 +71,7 @@ export default function Footer() {
               </li>
               <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
-                <span>hello@premachawada.com</span>
+                <span>premachawada1@gmail.com</span>
               </li>
               <li>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>

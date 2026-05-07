@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
-import Navbar from '@/components/Navbar/Navbar';
-import Footer from '@/components/Footer/Footer';
+import SiteChrome from '@/components/SiteChrome/SiteChrome';
 
 export const metadata: Metadata = {
   title: 'Premacha Vada — Authentic Maharashtrian Street Food',
@@ -26,11 +25,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <CartProvider>
-            <Navbar />
-            <main style={{ minHeight: '100vh' }}>
-              {children}
-            </main>
-            <Footer />
+            <SiteChrome>{children}</SiteChrome>
           </CartProvider>
         </AuthProvider>
       </body>

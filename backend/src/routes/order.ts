@@ -1,4 +1,5 @@
 import { Router, Response } from 'express';
+import mongoose from 'mongoose';
 import { requireAuth, AuthRequest } from '../middleware/authMiddleware';
 import Order from '../models/Order';
 import Cart from '../models/Cart';
@@ -7,16 +8,40 @@ const router = Router();
 
 /** Generates a unique sequential token number */
 async function generateTokenNumber(): Promise<number> {
-  // Get the highest token number today and increment it
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const lastOrderToday = await Order.findOne(
-    { createdAt: { $gte: today } },
+  // Use a globally increasing token because tokenNumber has a global unique index.
+  const lastOrder = await Order.findOne(
+    {},
     { tokenNumber: 1 },
     { sort: { tokenNumber: -1 } }
   );
-  // Tokens reset daily. Start from 101 so it always has 3 digits.
-  return lastOrderToday ? lastOrderToday.tokenNumber + 1 : 101;
+
+  return lastOrder ? lastOrder.tokenNumber + 1 : 101;
+}
+
+async function createOrderWithUniqueToken(orderData: Record<string, unknown>) {
+  const maxAttempts = 5;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const tokenNumber = await generateTokenNumber();
+      return await Order.create({
+        ...orderData,
+        tokenNumber,
+      });
+    } catch (error) {
+      const isDuplicateToken =
+        error instanceof mongoose.Error &&
+        'code' in error &&
+        (error as any).code === 11000 &&
+        (error as any).keyPattern?.tokenNumber;
+
+      if (!isDuplicateToken || attempt === maxAttempts) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error('Failed to generate unique token number.');
 }
 
 // ─────────────────────────────────────────────
@@ -57,9 +82,6 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
     const deliveryFee = orderType === 'delivery' ? 40 : 0;
     const totalAmount = subtotal + taxAmount + deliveryFee;
 
-    // Generate unique token number
-    const tokenNumber = await generateTokenNumber();
-
     // Determine payment & order status based on payment method
     const paymentStatus = paymentMethod === 'online' ? 'paid' : 'pending';
     const status = paymentMethod === 'online' ? 'confirmed' : 'pending';
@@ -73,8 +95,8 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
       image: item.menuItem.image || '',
     }));
 
-    // Create the order
-    const order = await Order.create({
+    // Create the order with retry in case of token collision under concurrent checkouts.
+    const order = await createOrderWithUniqueToken({
       user: userId,
       items: orderItems,
       totalAmount,
@@ -84,7 +106,6 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
       paymentMethod,
       paymentStatus,
       status,
-      tokenNumber,
       deliveryAddress: deliveryAddress || '',
       phone: phone || '',
       specialInstructions: specialInstructions || '',

@@ -10,6 +10,8 @@ export interface IMenuItem extends Document {
   isAvailable: boolean;
   isVeg: boolean;
   isBestseller: boolean;
+  promotionLabel?: string;
+  comboGroup?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +27,8 @@ const MenuItemSchema: Schema<IMenuItem> = new Schema(
     isAvailable: { type: Boolean, default: true },
     isVeg: { type: Boolean, default: true },
     isBestseller: { type: Boolean, default: false },
+    promotionLabel: { type: String, default: '', trim: true },
+    comboGroup: { type: String, default: '', trim: true },
   },
   { timestamps: true }
 );

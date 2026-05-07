@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import bcrypt from 'bcryptjs';
 import MenuItem from '../models/MenuItem';
+import User from '../models/User';
 
 // Load env variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -30,6 +32,40 @@ const seedMenu = async () => {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB.');
 
+    // ─────────────────────────────────────────────
+    // Seed Admin User
+    // ─────────────────────────────────────────────
+    console.log('\n--- Seeding Admin User ---');
+    const adminEmail = 'admin@test.com';
+    
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (existingAdmin) {
+      console.log(`Admin user already exists: ${adminEmail}`);
+    } else {
+      // Hash password
+      const hashedPassword = await bcrypt.hash('Test@123', 12);
+      
+      // Create admin user
+      const adminUser = await User.create({
+        name: 'Admin User',
+        email: adminEmail,
+        password: hashedPassword,
+        phone: '9876543210',
+        address: '123 Admin Street',
+        role: 'admin',
+      });
+      
+      console.log(`✓ Admin user created successfully!`);
+      console.log(`  Email: ${adminUser.email}`);
+      console.log(`  Password: Test@123`);
+      console.log(`  Role: ${adminUser.role}`);
+    }
+
+    // ─────────────────────────────────────────────
+    // Seed Menu Items
+    // ─────────────────────────────────────────────
+    console.log('\n--- Seeding Menu Items ---');
     console.log('Wiping existing MenuItem collection...');
     await MenuItem.deleteMany({});
     console.log('MenuItem collection wiped.');
@@ -47,7 +83,12 @@ const seedMenu = async () => {
 
     console.log('Inserting items into MongoDB...');
     await MenuItem.insertMany(processedItems);
-    console.log('Successfully seeded all menu items!');
+    console.log('✓ Successfully seeded all menu items!');
+
+    console.log('\n--- Seed Complete ---');
+    console.log('You can now login with:');
+    console.log('  Email: admin@test.com');
+    console.log('  Password: Test@123');
 
     process.exit(0);
   } catch (error) {

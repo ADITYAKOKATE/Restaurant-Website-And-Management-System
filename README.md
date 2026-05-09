@@ -3,8 +3,6 @@
 <p align="center">
   <img src="docs/assets/banner.png" alt="Premacha Wada Banner" width="100%">
 </p>
-
-
 A production-grade, full-stack ecosystem designed for high-volume Maharashtrian restaurant operations. This platform orchestrates a complex, multi-stakeholder workflow involving Customers, Administrators, Kitchen Staff, and Delivery Personnel.
 
 ---
@@ -117,7 +115,7 @@ FRONTEND_URL=http://localhost:3000
 ### Installation & Initialization
 ```bash
 # Clone the repository
-git clone https://github.com/Weston-tech/w1-premacha-wada.git
+git clone https://github.com/premachawada-admin/premacha-wada-website.git
 
 # Initialize Backend
 cd backend

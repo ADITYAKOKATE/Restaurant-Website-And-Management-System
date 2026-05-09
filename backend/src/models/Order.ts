@@ -17,14 +17,15 @@ export interface IOrderItem {
 
 export interface IOrder extends Document {
   user: mongoose.Types.ObjectId;
+  reservation?: mongoose.Types.ObjectId;
   items: IOrderItem[];
   totalAmount: number;
   taxAmount: number;
   deliveryFee: number;
   discountAmount: number;
   appliedPromoCode?: string;
-  /** Online delivery only — dine_in removed */
-  orderType: 'delivery';
+  orderType: 'delivery' | 'dine_in';
+  tableNumber?: number;
   status:
     | 'pending'
     | 'confirmed'
@@ -73,6 +74,7 @@ const OrderItemSchema = new Schema<IOrderItem>({
 const OrderSchema: Schema<IOrder> = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    reservation: { type: Schema.Types.ObjectId, ref: 'Reservation' },
     items: [OrderItemSchema],
     totalAmount: { type: Number, required: true, min: 0 },
     taxAmount: { type: Number, default: 0 },
@@ -81,9 +83,10 @@ const OrderSchema: Schema<IOrder> = new Schema(
     appliedPromoCode: { type: String, default: '' },
     orderType: {
       type: String,
-      enum: ['delivery'],
+      enum: ['delivery', 'dine_in'],
       default: 'delivery',
     },
+    tableNumber: { type: Number, default: null },
     status: {
       type: String,
       enum: [

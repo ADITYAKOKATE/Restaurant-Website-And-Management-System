@@ -40,4 +40,6 @@ export const defaultSettings: AdminSettingsState = {
   minimumOrderAmount: 150,
   allowOnlinePayments: true,
   estimatedPrepTime: 30,
+  tableCount: 15,
+  reservationTimeSlots: ['12:00 PM', '1:00 PM', '8:00 PM', '9:00 PM'],
 };

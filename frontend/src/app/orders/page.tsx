@@ -21,7 +21,9 @@ interface Order {
   deliveryFee: number;
   discountAmount?: number;
   appliedPromoCode?: string;
-  orderType: 'delivery';
+  orderType: 'delivery' | 'dine_in';
+  tableNumber?: number;
+  reservation?: { timeSlot: string };
   status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
   paymentMethod: 'online' | 'cod';
   paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
@@ -144,9 +146,14 @@ function OrdersContent() {
                   {/* Header Row */}
                   <div className="order-card-header">
                     <div className="order-card-meta">
-                      <div className="order-type-badge">
-                        🚴 Delivery
+                      <div className="order-type-badge" style={{ background: order.orderType === 'dine_in' ? 'rgba(255, 107, 53, 0.1)' : '', color: order.orderType === 'dine_in' ? '#FF6B35' : '' }}>
+                        {order.orderType === 'dine_in' ? `🍽️ Dine-In (Table ${order.tableNumber})` : '🚴 Delivery'}
                       </div>
+                      {order.reservation && (
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px', background: 'var(--surface-sunken)', padding: '2px 8px', borderRadius: '12px' }}>
+                          Linked to Reservation at {order.reservation.timeSlot}
+                        </span>
+                      )}
                       <span className="order-date">{date}</span>
                     </div>
 

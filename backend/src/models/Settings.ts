@@ -7,6 +7,8 @@ export interface ISettings extends Document {
   taxRate: number;
   onlinePaymentsEnabled: boolean;
   estimatedPrepTime: number; // minutes
+  tableCount: number;
+  reservationTimeSlots: string[];
   updatedAt: Date;
 }
 
@@ -18,6 +20,11 @@ const SettingsSchema: Schema<ISettings> = new Schema(
     taxRate: { type: Number, default: 5 },
     onlinePaymentsEnabled: { type: Boolean, default: true },
     estimatedPrepTime: { type: Number, default: 30 }, // 30 minutes default
+    tableCount: { type: Number, default: 25 },
+    reservationTimeSlots: { 
+      type: [String], 
+      default: ["11:00", "12:00", "13:00", "14:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"] 
+    },
   },
   { timestamps: true }
 );

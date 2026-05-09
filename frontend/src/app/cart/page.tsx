@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -28,9 +28,33 @@ export default function CartPage() {
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountAmount: number; title: string } | null>(null);
   const [promoMessage, setPromoMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  
+  // Settings state
+  const [settings, setSettings] = useState<any>(null);
 
-  const taxAmount = Math.round(cartTotal * 0.05);
-  const deliveryFee = orderType === 'delivery' ? 40 : 0;
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.success) {
+          setSettings(data.settings);
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const taxRate = settings ? settings.taxRate / 100 : 0.05;
+  const deliveryCharge = settings ? settings.deliveryCharge : 40;
+  const minimumOrder = settings ? settings.minimumOrder : 200;
+  const isStoreOpen = settings ? settings.storeOpen : true;
+  const onlinePaymentsEnabled = settings ? settings.onlinePaymentsEnabled : true;
+
+  const taxAmount = Math.round(cartTotal * taxRate);
+  const deliveryFee = orderType === 'delivery' ? deliveryCharge : 0;
   const discountAmount = appliedPromo?.discountAmount || 0;
   const grandTotal = Math.max(0, cartTotal + taxAmount + deliveryFee - discountAmount);
 
@@ -193,13 +217,13 @@ export default function CartPage() {
                     <span>Subtotal ({cartItems.reduce((s, i) => s + i.quantity, 0)} items)</span>
                     <span>₹{cartTotal}</span>
                   </div>
-                  <div className="cart-summary-row">
-                    <span>Taxes (5%)</span>
+                   <div className="cart-summary-row">
+                    <span>Taxes ({Math.round(taxRate * 100)}%)</span>
                     <span>₹{taxAmount}</span>
                   </div>
                   <div className="cart-summary-row">
                     <span>Delivery Fee</span>
-                    <span>₹40</span>
+                    <span>₹{deliveryFee}</span>
                   </div>
                   {appliedPromo && (
                     <div className="cart-summary-row" style={{ color: '#2ecc71' }}>
@@ -212,6 +236,20 @@ export default function CartPage() {
                     <span>Total</span>
                     <span style={{ color: 'var(--secondary)' }}>₹{grandTotal}</span>
                   </div>
+                </div>
+
+                {/* Validation Messages */}
+                <div style={{ marginTop: 'var(--space-md)' }}>
+                  {!isStoreOpen && (
+                    <div className="alert alert-danger" style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255, 71, 87, 0.1)', border: '1px solid #ff4757', color: '#ff4757', fontSize: '13px', marginBottom: '10px' }}>
+                      <strong>🏪 Store Closed:</strong> We are currently not accepting orders.
+                    </div>
+                  )}
+                  {cartTotal < minimumOrder && (
+                    <div className="alert alert-info" style={{ padding: '10px', borderRadius: '8px', background: 'rgba(52, 152, 219, 0.1)', border: '1px solid #3498db', color: '#3498db', fontSize: '13px', marginBottom: '10px' }}>
+                      <strong>💡 Minimum Order:</strong> Add ₹{minimumOrder - cartTotal} more to reach the ₹{minimumOrder} minimum.
+                    </div>
+                  )}
                 </div>
 
                 {/* Promo Code Input */}
@@ -252,8 +290,13 @@ export default function CartPage() {
                 </div>
 
                 {!showCheckout ? (
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: 'var(--space-lg)' }} onClick={() => setShowCheckout(true)}>
-                    Proceed to Checkout →
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', marginTop: 'var(--space-lg)' }} 
+                    onClick={() => setShowCheckout(true)}
+                    disabled={!isStoreOpen || cartTotal < minimumOrder}
+                  >
+                    {!isStoreOpen ? 'Store Closed' : cartTotal < minimumOrder ? 'Below Minimum Order' : 'Proceed to Checkout →'}
                   </button>
                 ) : (
                   <div className="checkout-form">
@@ -283,16 +326,18 @@ export default function CartPage() {
                     <div className="checkout-section">
                       <label className="checkout-label">Payment Method</label>
                       <div className="payment-options">
-                        <label className={`payment-option ${paymentMethod === 'online' ? 'payment-option--selected' : ''}`}>
-                          <input type="radio" name="payment" value="online" checked={paymentMethod === 'online'} onChange={() => setPaymentMethod('online')} />
-                          <div className="payment-option-content">
-                            <span className="payment-option-icon">💳</span>
-                            <div>
-                              <p className="payment-option-title">Pay Online</p>
-                              <p className="payment-option-sub">Order confirmed instantly</p>
+                        {onlinePaymentsEnabled && (
+                          <label className={`payment-option ${paymentMethod === 'online' ? 'payment-option--selected' : ''}`}>
+                            <input type="radio" name="payment" value="online" checked={paymentMethod === 'online'} onChange={() => setPaymentMethod('online')} />
+                            <div className="payment-option-content">
+                              <span className="payment-option-icon">💳</span>
+                              <div>
+                                <p className="payment-option-title">Pay Online</p>
+                                <p className="payment-option-sub">Order confirmed instantly</p>
+                              </div>
                             </div>
-                          </div>
-                        </label>
+                          </label>
+                        )}
                         <label className={`payment-option ${paymentMethod === 'cod' ? 'payment-option--selected' : ''}`}>
                           <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
                           <div className="payment-option-content">

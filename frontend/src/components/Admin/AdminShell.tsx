@@ -45,10 +45,21 @@ export default function AdminShell({
       subtitle: 'Manage roles, account status, and customer access.',
     },
     {
+      path: '/admin/billing',
+      title: 'Billing & Revenue',
+      subtitle: 'Monitor financial performance, tax, and payment splits.',
+    },
+    {
+      path: '/admin/reservations',
+      title: 'Reservations',
+      subtitle: 'Manage table bookings and guest requests.',
+    },
+    {
       path: '/admin/analytics',
       title: 'Analytics',
       subtitle: 'Monitor sales trends, top items, and payment performance.',
     },
+
     {
       path: '/admin/settings',
       title: 'Settings',

@@ -56,7 +56,7 @@ function CallToAction() {
       <a href="/menu" className={styles.btnPrimary}>
         Explore Menu
       </a>
-      <a href="/reserve" className={styles.btnSecondary}>
+      <a href="/reservations" className={styles.btnSecondary}>
         Reserve Table
       </a>
     </div>

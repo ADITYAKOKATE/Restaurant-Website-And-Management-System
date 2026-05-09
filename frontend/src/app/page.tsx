@@ -6,7 +6,7 @@ import MenuCategories from '@/components/Home/MenuCategories/MenuCategories';
 import Offers from '@/components/Home/Offers/Offers';
 import WhyChooseUs from '@/components/Home/WhyChooseUs/WhyChooseUs';
 import Gallery from '@/components/Home/Gallery/Gallery';
-import Testimonials from '@/components/Home/Testimonials/Testimonials';
+import GoogleReviews from '@/components/Home/GoogleReviews/GoogleReviews';
 import Contact from '@/components/Home/Contact/Contact';
 
 /**
@@ -39,7 +39,7 @@ export default function HomePage() {
       <Offers />
       <WhyChooseUs />
       <Gallery />
-      <Testimonials />
+      <GoogleReviews />
       <Contact />
     </>
   );

@@ -1,0 +1,145 @@
+.section {
+  padding: 8rem 2rem;
+  background: radial-gradient(circle at top right, rgba(255, 107, 53, 0.05), transparent 40%),
+              radial-gradient(circle at bottom left, rgba(255, 215, 0, 0.05), transparent 40%);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #FF6B35;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.8rem;
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2rem;
+  border-radius: 24px;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 107, 53, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 107, 53, 0.2);
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.userName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.time {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.googleIcon {
+  background: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.rating {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1rem;
+}
+
+.starFull {
+  color: #FFD700;
+}
+
+.starEmpty {
+  color: rgba(255, 255, 255, 0.1);
+}
+
+.text {
+  font-style: italic;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.footer {
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.reviewButton {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.reviewButton:hover {
+  background: white;
+  color: black;
+  transform: scale(1.05);
+}
+
+.loader {
+  padding: 4rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}

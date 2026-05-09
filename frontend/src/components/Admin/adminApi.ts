@@ -1,4 +1,4 @@
-import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState, AdminOfferRecord } from './adminTypes';
+import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState, AdminOfferRecord, AdminBillingStats, AdminReservationRecord } from './adminTypes';
 
 const fetchOptions: RequestInit = {
   credentials: 'include',
@@ -14,6 +14,8 @@ type AdminSettingsApiPayload = {
   taxRate: number;
   onlinePaymentsEnabled: boolean;
   estimatedPrepTime: number;
+  tableCount: number;
+  reservationTimeSlots: string[];
 };
 
 function mapSettingsFromApi(payload: AdminSettingsApiPayload): AdminSettingsState {
@@ -24,6 +26,8 @@ function mapSettingsFromApi(payload: AdminSettingsApiPayload): AdminSettingsStat
     taxRate: Number(payload.taxRate) || 0,
     allowOnlinePayments: payload.onlinePaymentsEnabled,
     estimatedPrepTime: Number(payload.estimatedPrepTime) || 30,
+    tableCount: Number(payload.tableCount) || 25,
+    reservationTimeSlots: payload.reservationTimeSlots || [],
   };
 }
 
@@ -35,6 +39,8 @@ function mapSettingsToApi(settings: AdminSettingsState): AdminSettingsApiPayload
     taxRate: settings.taxRate,
     onlinePaymentsEnabled: settings.allowOnlinePayments,
     estimatedPrepTime: settings.estimatedPrepTime,
+    tableCount: settings.tableCount,
+    reservationTimeSlots: settings.reservationTimeSlots,
   };
 }
 
@@ -47,6 +53,27 @@ export async function fetchAdminOrders(): Promise<AdminOrderRecord[]> {
     throw new Error('Failed to load admin orders');
   }
   return response.json();
+}
+
+export async function createAdminPOSOrder(payload: {
+  items: { menuItemId: string; quantity: number }[];
+  paymentMethod: 'online' | 'cod';
+  tableNumber?: number;
+  discountAmount?: number;
+}): Promise<AdminOrderRecord> {
+  const response = await fetch('/api/orders/admin/create', {
+    ...fetchOptions,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.message || 'Failed to create POS order');
+  }
+
+  const result = await response.json();
+  return result.order;
 }
 
 export async function acceptAdminOrder(orderId: string): Promise<AdminOrderRecord> {
@@ -280,3 +307,48 @@ export async function deleteAdminOffer(offerId: string): Promise<void> {
     throw new Error('Failed to delete offer');
   }
 }
+
+// ─────────────────────────────────────────────
+// BILLING APIs
+// ─────────────────────────────────────────────
+export async function fetchAdminBillingStats(startDate?: string, endDate?: string): Promise<AdminBillingStats> {
+  const query = new URLSearchParams();
+  if (startDate) query.append('startDate', startDate);
+  if (endDate) query.append('endDate', endDate);
+  
+  const response = await fetch(`/api/billing/stats?${query.toString()}`, { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to load billing stats');
+  }
+  return response.json();
+}
+
+// ─────────────────────────────────────────────
+// RESERVATION APIs
+// ─────────────────────────────────────────────
+export async function fetchAdminReservations(date?: string, status?: string): Promise<AdminReservationRecord[]> {
+  const query = new URLSearchParams();
+  if (date) query.append('date', date);
+  if (status) query.append('status', status);
+  
+  const response = await fetch(`/api/reservations/admin/all?${query.toString()}`, { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error('Failed to load reservations');
+  }
+  return response.json();
+}
+
+export async function updateAdminReservationStatus(reservationId: string, status: string): Promise<AdminReservationRecord> {
+  const response = await fetch(`/api/reservations/admin/${reservationId}/status`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update reservation status');
+  }
+
+  const result = await response.json();
+  return result.reservation;
+}

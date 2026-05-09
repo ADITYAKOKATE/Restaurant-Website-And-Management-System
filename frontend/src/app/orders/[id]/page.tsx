@@ -21,7 +21,9 @@ interface Order {
   deliveryFee: number;
   discountAmount?: number;
   appliedPromoCode?: string;
-  orderType: 'delivery';
+  orderType: 'delivery' | 'dine_in';
+  tableNumber?: number;
+  reservation?: { timeSlot: string };
   status: string;
   paymentMethod: 'online' | 'cod';
   paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
@@ -112,9 +114,14 @@ export default function OrderDetailPage() {
             <p style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Order Token</p>
             <p className="order-detail-token">#{order.tokenNumber}</p>
             <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{date}</p>
-            <p style={{ fontSize: 13, marginTop: 4, color: 'var(--text-muted)' }}>
-              🚴 Delivery
+            <p style={{ fontSize: 13, marginTop: 4, color: order.orderType === 'dine_in' ? '#FF6B35' : 'var(--text-muted)' }}>
+              {order.orderType === 'dine_in' ? `🍽️ Dine-In (Table ${order.tableNumber})` : '🚴 Delivery'}
             </p>
+            {order.reservation && (
+              <p style={{ fontSize: 12, marginTop: 4, color: 'var(--text-secondary)' }}>
+                Linked to Reservation at {order.reservation.timeSlot}
+              </p>
+            )}
           </div>
           <div style={{ textAlign: 'right' }}>
             <div
@@ -229,16 +236,25 @@ export default function OrderDetailPage() {
 
 
         {/* Delivery / Dine-In Info */}
-        {(order.deliveryAddress || order.specialInstructions) && (
-          <div className="card" style={{ padding: 'var(--space-lg) var(--space-xl)' }}>
-            {order.deliveryAddress && (
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>📍 {order.deliveryAddress}</p>
-            )}
-            {order.specialInstructions && (
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>📝 {order.specialInstructions}</p>
-            )}
-          </div>
-        )}
+        <div className="card" style={{ padding: 'var(--space-lg) var(--space-xl)' }}>
+          {order.orderType === 'dine_in' ? (
+            <div>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>🍽️ <strong>Dine-In</strong> - Table {order.tableNumber}</p>
+              {order.reservation && (
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>🕒 Reservation Time: {order.reservation.timeSlot}</p>
+              )}
+            </div>
+          ) : (
+            <>
+              {order.deliveryAddress && (
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>📍 {order.deliveryAddress}</p>
+              )}
+              {order.specialInstructions && (
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>📝 {order.specialInstructions}</p>
+              )}
+            </>
+          )}
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: 'var(--space-lg)' }}>
           <Link href="/menu" className="btn btn-primary">Order Again 🍛</Link>

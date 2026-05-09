@@ -24,7 +24,7 @@ export default function Contact() {
             >
               Get Directions
             </a>
-            <a href="/contact" className={`${styles.button} ${styles.bookButton}`}>
+            <a href="/reservations" className={`${styles.button} ${styles.bookButton}`}>
               Book a Table
             </a>
           </div>

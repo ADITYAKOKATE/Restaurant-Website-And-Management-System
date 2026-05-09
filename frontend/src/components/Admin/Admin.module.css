@@ -44,7 +44,25 @@
   flex-direction: column;
   gap: 22px;
   transition: width var(--transition-base), transform var(--transition-base);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 53, 0.3);
 }
 
 .sidebarCollapsed {
@@ -129,7 +147,7 @@
 .sidebarNav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .sidebarLink {
@@ -688,7 +706,6 @@
 
 .searchInput,
 .textInput,
-.selectInput,
 .textareaInput {
   width: 100%;
   padding: 14px 16px;
@@ -698,6 +715,28 @@
   color: var(--text-primary);
   outline: none;
   transition: all var(--transition-base);
+}
+
+.selectInput {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-base);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+
+.selectInput option {
+  background-color: #121212;
+  color: var(--text-primary);
+  padding: 12px;
 }
 
 .searchInput:focus,
@@ -1256,5 +1295,46 @@
 
   .mobileOnly {
     display: inline-flex;
+  }
+}
+
+.printArea {
+  display: none;
+}
+
+/* Print Styles for Bills */
+@media print {
+  @page {
+    margin: 0;
+  }
+  
+  .printArea {
+    display: block !important;
+  }
+  
+  /* Hide everything in the body by default */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the printable container */
+  .printArea, .printArea * {
+    visibility: visible;
+  }
+  
+  .printArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Reset some default background styling that might affect printing */
+  html, body {
+    background: white !important;
   }
 }

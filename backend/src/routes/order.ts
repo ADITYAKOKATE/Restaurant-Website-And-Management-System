@@ -5,6 +5,8 @@ import Order from '../models/Order';
 import Cart from '../models/Cart';
 import Offer from '../models/Offer';
 import { getOrCreateSettings } from '../models/Settings';
+import MenuItem from '../models/MenuItem';
+import Reservation from '../models/Reservation';
 
 const router = Router();
 
@@ -77,7 +79,26 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
 
     const settings = await getOrCreateSettings();
 
+    // 1. Check if store is open
+    if (!settings.storeOpen) {
+      res.status(400).json({ success: false, message: 'Restaurant is currently closed for new orders.' });
+      return;
+    }
+
     const subtotal = validItems.reduce((sum: number, item: any) => sum + (item.menuItem.price * item.quantity), 0);
+
+    // 2. Check minimum order amount
+    if (subtotal < settings.minimumOrder) {
+      res.status(400).json({ success: false, message: `Minimum order amount is ₹${settings.minimumOrder}.` });
+      return;
+    }
+
+    // 3. Check online payments enabled
+    if (paymentMethod === 'online' && !settings.onlinePaymentsEnabled) {
+      res.status(400).json({ success: false, message: 'Online payments are currently disabled. Please choose Cash on Delivery.' });
+      return;
+    }
+
     const taxAmount = Math.round(subtotal * (settings.taxRate / 100));
     const deliveryFee = settings.deliveryCharge;
     
@@ -169,7 +190,7 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
 router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).populate('assignedTo', 'name phone');
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).populate('assignedTo', 'name phone').populate('reservation');
     res.json(orders);
   } catch (err: any) {
     console.error('Fetch orders error:', err);
@@ -183,7 +204,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
 router.get('/:id', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const order = await Order.findOne({ _id: req.params.id, user: userId }).populate('assignedTo', 'name phone');
+    const order = await Order.findOne({ _id: req.params.id, user: userId }).populate('assignedTo', 'name phone').populate('reservation');
     if (!order) {
       res.status(404).json({ success: false, message: 'Order not found.' });
       return;
@@ -222,6 +243,109 @@ router.get('/admin/all', requireAdmin, async (req: AuthRequest, res: Response): 
   } catch (err: any) {
     console.error('Admin fetch orders error:', err);
     res.status(500).json({ success: false, message: 'Server error while fetching orders.' });
+  }
+});
+
+// POST /api/orders/admin/create — Admin manually creates a POS order
+router.post('/admin/create', requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const adminId = req.user?.userId;
+    const { items, paymentMethod, tableNumber, specialInstructions, discountAmount } = req.body;
+
+    if (!items || items.length === 0) {
+      res.status(400).json({ success: false, message: 'Items are required.' });
+      return;
+    }
+
+    const settings = await getOrCreateSettings();
+
+    // Validate items and calculate subtotal
+    const orderItems = [];
+    let subtotal = 0;
+
+    for (const item of items) {
+      const menuItem = await MenuItem.findById(item.menuItemId);
+      if (menuItem) {
+        orderItems.push({
+          menuItem: menuItem._id,
+          name: menuItem.name,
+          price: menuItem.price,
+          quantity: item.quantity,
+          image: menuItem.image || '',
+        });
+        subtotal += menuItem.price * item.quantity;
+      }
+    }
+
+    if (orderItems.length === 0) {
+      res.status(400).json({ success: false, message: 'No valid items found.' });
+      return;
+    }
+
+    const taxAmount = Math.round(subtotal * (settings.taxRate / 100));
+    const deliveryFee = 0; // POS dine-in has no delivery fee
+    const finalDiscount = discountAmount ? Number(discountAmount) : 0;
+    
+    const totalAmount = subtotal + taxAmount + deliveryFee - finalDiscount;
+
+    // For POS orders, we can mark them as paid and delivered immediately if paid by cash/online
+    const paymentStatus = 'paid';
+    const status = 'delivered';
+
+    let orderUserId = adminId;
+    let linkedReservationId = null;
+
+    if (tableNumber) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Find active reservation for this table today
+      const activeReservation = await Reservation.findOne({
+        tableNumber: Number(tableNumber),
+        date: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: ['pending', 'confirmed'] }
+      }).sort({ timeSlot: 1 });
+
+      if (activeReservation) {
+        orderUserId = activeReservation.user.toString();
+        linkedReservationId = activeReservation._id;
+        
+        activeReservation.status = 'completed';
+        await activeReservation.save();
+      }
+    }
+
+    const order = await createOrderWithUniqueToken({
+      user: orderUserId,
+      reservation: linkedReservationId,
+      items: orderItems,
+      totalAmount,
+      taxAmount,
+      deliveryFee,
+      discountAmount: finalDiscount,
+      orderType: 'dine_in',
+      tableNumber: tableNumber || null,
+      paymentMethod,
+      paymentStatus,
+      status,
+      deliveryAddress: 'Dine In POS',
+      specialInstructions: specialInstructions || '',
+      statusHistory: [
+        { status: 'pending', changedBy: adminId },
+        { status: 'delivered', changedBy: adminId, note: 'POS Order Auto Completed' }
+      ]
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'POS Order created successfully!',
+      order
+    });
+  } catch (err: any) {
+    console.error('POS Checkout error:', err);
+    res.status(500).json({ success: false, message: 'Server error during POS checkout.' });
   }
 });
 

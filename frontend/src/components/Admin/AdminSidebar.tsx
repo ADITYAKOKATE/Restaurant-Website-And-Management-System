@@ -10,6 +10,8 @@ const navItems = [
   { href: '/admin/menu', label: 'Menu', icon: '≣', color: '#FFD700' },
   { href: '/admin/offers', label: 'Offers', icon: '🎉', color: '#E74C3C' },
   { href: '/admin/users', label: 'Users', icon: '◉', color: '#2ECC71' },
+  { href: '/admin/billing', label: 'Billing', icon: '₹', color: '#2ECC71' },
+  { href: '/admin/reservations', label: 'Reservations', icon: '📅', color: '#FFD700' },
   { href: '/admin/analytics', label: 'Analytics', icon: '▰', color: '#3498DB' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙', color: '#9B59B6' },
 ];

@@ -60,7 +60,13 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.userId;
-    const reservations = await Reservation.find({ user: userId }).sort({ date: -1 });
+    if (!userId) {
+      res.status(401).json({ success: false, message: 'Unauthorized' });
+      return;
+    }
+    const reservations = await Reservation.find({ 
+      user: new mongoose.Types.ObjectId(userId) 
+    }).sort({ createdAt: -1 });
     res.json(reservations);
   } catch (err: any) {
     console.error('Fetch my reservations error:', err);
@@ -82,7 +88,7 @@ router.get('/admin/all', requireAdmin, async (req: AuthRequest, res: Response): 
 
     const reservations = await Reservation.find(filter)
       .populate('user', 'name email phone')
-      .sort({ date: 1, timeSlot: 1 });
+      .sort({ createdAt: -1 });
     res.json(reservations);
   } catch (err: any) {
     console.error('Admin fetch reservations error:', err);

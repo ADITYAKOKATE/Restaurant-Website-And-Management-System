@@ -30,7 +30,14 @@ const ReservationSchema: Schema<IReservation> = new Schema(
 );
 
 // Index to prevent double booking of the same table at the same time
-ReservationSchema.index({ tableNumber: 1, date: 1, timeSlot: 1 }, { unique: true });
+// Only applies to pending and confirmed reservations
+ReservationSchema.index(
+  { tableNumber: 1, date: 1, timeSlot: 1 },
+  { 
+    unique: true, 
+    partialFilterExpression: { status: { $in: ['pending', 'confirmed'] } } 
+  }
+);
 ReservationSchema.index({ user: 1, date: -1 });
 
 const Reservation: Model<IReservation> =

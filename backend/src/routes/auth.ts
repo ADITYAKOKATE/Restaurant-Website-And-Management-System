@@ -54,7 +54,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       success: true,
       message: 'Account created successfully! Welcome to Premacha Wada!',
       user: {
-        id: user._id.toString(),
+        userId: user._id.toString(),
         name: user.name,
         email: user.email,
         role: user.role,
@@ -102,7 +102,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       success: true,
       message: 'Login successful! Welcome back!',
       user: {
-        id: user._id.toString(),
+        userId: user._id.toString(),
         name: user.name,
         email: user.email,
         role: user.role,

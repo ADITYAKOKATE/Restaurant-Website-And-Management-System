@@ -1,4 +1,4 @@
-import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState, AdminOfferRecord, AdminBillingStats, AdminReservationRecord } from './adminTypes';
+import { AdminMenuItemRecord, AdminOrderRecord, AdminUserRecord, AdminSettingsState, AdminOfferRecord, AdminReservationRecord, POSTableStatus, POSActiveOrder } from './adminTypes';
 
 const fetchOptions: RequestInit = {
   credentials: 'include',
@@ -47,34 +47,16 @@ function mapSettingsToApi(settings: AdminSettingsState): AdminSettingsApiPayload
 // ─────────────────────────────────────────────
 // ORDER APIs
 // ─────────────────────────────────────────────
-export async function fetchAdminOrders(): Promise<AdminOrderRecord[]> {
-  const response = await fetch('/api/orders/admin/all', { credentials: 'include' });
+export async function fetchAdminOrders(category?: string): Promise<AdminOrderRecord[]> {
+  const url = category ? `/api/orders/admin/all?category=${category}` : '/api/orders/admin/all';
+  const response = await fetch(url, { credentials: 'include' });
   if (!response.ok) {
     throw new Error('Failed to load admin orders');
   }
   return response.json();
 }
 
-export async function createAdminPOSOrder(payload: {
-  items: { menuItemId: string; quantity: number }[];
-  paymentMethod: 'online' | 'cod';
-  tableNumber?: number;
-  discountAmount?: number;
-}): Promise<AdminOrderRecord> {
-  const response = await fetch('/api/orders/admin/create', {
-    ...fetchOptions,
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.message || 'Failed to create POS order');
-  }
-
-  const result = await response.json();
-  return result.order;
-}
+// createAdminPOSOrder is superseded by createPOSOrder in the billing section below
 
 export async function acceptAdminOrder(orderId: string): Promise<AdminOrderRecord> {
   const response = await fetch(`/api/orders/admin/${orderId}/accept`, {
@@ -309,18 +291,112 @@ export async function deleteAdminOffer(offerId: string): Promise<void> {
 }
 
 // ─────────────────────────────────────────────
-// BILLING APIs
+// POS & BILLING APIs
 // ─────────────────────────────────────────────
-export async function fetchAdminBillingStats(startDate?: string, endDate?: string): Promise<AdminBillingStats> {
-  const query = new URLSearchParams();
-  if (startDate) query.append('startDate', startDate);
-  if (endDate) query.append('endDate', endDate);
-  
-  const response = await fetch(`/api/billing/stats?${query.toString()}`, { credentials: 'include' });
-  if (!response.ok) {
-    throw new Error('Failed to load billing stats');
-  }
+export async function fetchPOSTables(): Promise<POSTableStatus[]> {
+  const response = await fetch('/api/billing/tables', { credentials: 'include' });
+  if (!response.ok) throw new Error('Failed to load table status');
   return response.json();
+}
+
+export async function fetchTableActiveOrder(tableNumber: number): Promise<POSActiveOrder | null> {
+  const response = await fetch(`/api/billing/table/${tableNumber}/order`, { credentials: 'include' });
+  if (!response.ok) throw new Error('Failed to load table order');
+  const data = await response.json();
+  return data.order;
+}
+
+export async function createPOSOrder(payload: {
+  tableNumber: number;
+  items: { menuItemId: string; quantity: number }[];
+  paymentMethod?: string;
+  discountAmount?: number;
+  specialInstructions?: string;
+}): Promise<POSActiveOrder> {
+  const response = await fetch('/api/billing/pos/order', {
+    ...fetchOptions,
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to create POS order');
+  }
+  const data = await response.json();
+  return data.order;
+}
+
+export async function addItemsToPOSOrder(
+  orderId: string,
+  payload: { items: { menuItemId: string; quantity: number }[]; discountAmount?: number }
+): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/add-items`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to add items');
+  }
+  return (await response.json()).order;
+}
+
+export async function updatePOSDiscount(orderId: string, discountAmount: number): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/discount`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ discountAmount }),
+  });
+  if (!response.ok) throw new Error('Failed to update discount');
+  return (await response.json()).order;
+}
+
+export async function removeItemFromPOSOrder(orderId: string, menuItemId: string, delta: number): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/remove-item`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ menuItemId, delta }),
+  });
+  if (!response.ok) throw new Error('Failed to update item quantity');
+  return (await response.json()).order;
+}
+
+export async function markKOTPrinted(orderId: string): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/kot`, {
+    ...fetchOptions,
+    method: 'PATCH',
+  });
+  if (!response.ok) throw new Error('Failed to mark KOT');
+  return (await response.json()).order;
+}
+
+export async function markBillPrinted(orderId: string): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/bill-printed`, {
+    ...fetchOptions,
+    method: 'PATCH',
+  });
+  if (!response.ok) throw new Error('Failed to mark bill printed');
+  return (await response.json()).order;
+}
+
+export async function processPOSPayment(orderId: string, paymentMethod: string): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/payment`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify({ paymentMethod }),
+  });
+  if (!response.ok) throw new Error('Failed to process payment');
+  return (await response.json()).order;
+}
+
+export async function cleanPOSTable(orderId: string): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/clean`, {
+    ...fetchOptions,
+    method: 'PATCH',
+  });
+  if (!response.ok) throw new Error('Failed to clean table');
+  return (await response.json()).order;
 }
 
 // ─────────────────────────────────────────────

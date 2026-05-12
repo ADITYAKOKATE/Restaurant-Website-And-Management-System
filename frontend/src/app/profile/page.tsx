@@ -223,6 +223,10 @@ export default function ProfilePage() {
                 <span className="profile-stat-icon">📦</span>
                 <span className="profile-stat-label">View Orders</span>
               </Link>
+              <Link href="/my-reservations" className="profile-stat-card card">
+                <span className="profile-stat-icon">📅</span>
+                <span className="profile-stat-label">My Reservations</span>
+              </Link>
               <Link href="/cart" className="profile-stat-card card">
                 <span className="profile-stat-icon">🛒</span>
                 <span className="profile-stat-label">My Cart</span>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './Reservations.module.css';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface BookedTable {
   tableNumber: number;
@@ -84,8 +85,15 @@ export default function ReservationsPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Book Your Table</h1>
-        <p className={styles.subtitle}>Experience premium Maharashtrian dining at Premacha Wada.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div>
+            <h1 className={styles.title}>Book Your Table</h1>
+            <p className={styles.subtitle}>Experience premium Maharashtrian dining at Premacha Wada.</p>
+          </div>
+          <Link href="/my-reservations" className={styles.historyLink}>
+            📋 My Bookings
+          </Link>
+        </div>
       </header>
 
       <div className={styles.reservationGrid}>

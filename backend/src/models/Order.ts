@@ -49,6 +49,10 @@ export interface IOrder extends Document {
   estimatedDeliveryTime?: Date;
   /** Cancellation reason set by admin */
   cancellationReason?: string;
+  /** POS: whether KOT has been sent to kitchen */
+  isKotPrinted?: boolean;
+  /** POS: whether bill has been printed for this table */
+  isBillPrinted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -119,6 +123,8 @@ const OrderSchema: Schema<IOrder> = new Schema(
     statusHistory: { type: [StatusHistorySchema], default: [] },
     estimatedDeliveryTime: { type: Date, default: null },
     cancellationReason: { type: String, default: '' },
+    isKotPrinted: { type: Boolean, default: false },
+    isBillPrinted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

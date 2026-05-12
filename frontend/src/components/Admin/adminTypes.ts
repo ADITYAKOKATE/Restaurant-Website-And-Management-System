@@ -100,29 +100,53 @@ export interface AdminReservationRecord {
   createdAt: string;
 }
 
-export interface AdminBillingStats {
-  summary: {
-    totalRevenue: number;
-    totalOrders: number;
-    totalTax: number;
-    totalDeliveryFees: number;
-    totalDiscounts: number;
+// ─── POS Types ────────────────────────────────────────────────────────────────
+export type POSTableZone = 'INSIDE' | 'OUTSIDE' | 'PARCEL';
+export type POSTableStatusType = 'blank' | 'running' | 'kot' | 'printed' | 'paid' | 'reserved';
+
+export interface POSTableStatus {
+  tableNumber: number;
+  label: string; // e.g. T1, T18, P1
+  zone: POSTableZone;
+  status: POSTableStatusType;
+  orderId?: string;
+  totalAmount?: number;
+  itemCount?: number;
+  minutesElapsed?: number;
+  orderCategory?: 'pos' | 'delivery';
+  customerName?: string;
+  reservedFor?: {
+    guestName: string;
+    guests: number;
+    timeSlot: string;
   };
-  revenueByDay: {
-    _id: string;
-    revenue: number;
-    orders: number;
-  }[];
-  paymentSplit: {
-    _id: string;
-    value: number;
-    count: number;
-  }[];
-  typeSplit: {
-    _id: string;
-    value: number;
-    count: number;
-  }[];
+}
+
+export interface POSOrderItem {
+  menuItem: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+export interface POSActiveOrder {
+  _id: string;
+  tableNumber: number;
+  items: POSOrderItem[];
+  totalAmount: number;
+  taxAmount: number;
+  discountAmount: number;
+  deliveryFee: number;
+  status: AdminOrderStatus;
+  paymentMethod: AdminPaymentMethod;
+  paymentStatus: 'pending' | 'pending_verification' | 'paid' | 'failed';
+  isKotPrinted: boolean;
+  isBillPrinted: boolean;
+  tokenNumber: number;
+  specialInstructions: string;
+  createdAt: string;
+  user?: { name?: string; phone?: string; email?: string } | null;
 }
 
 export interface AdminOfferRecord {

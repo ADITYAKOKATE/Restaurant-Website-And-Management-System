@@ -223,11 +223,23 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res: Response): Promise
 // GET /api/orders/admin/all — Get all orders (admin only)
 router.get('/admin/all', requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, paymentMethod, orderType, date } = req.query;
+    const { status, paymentMethod, orderType, date, category } = req.query;
     const filter: any = {};
     if (status) filter.status = status;
     if (paymentMethod) filter.paymentMethod = paymentMethod;
     if (orderType) filter.orderType = orderType;
+    
+    // category: walkin | reserved | delivery
+    if (category === 'walkin') {
+      filter.orderType = 'dine_in';
+      filter.reservation = null;
+    } else if (category === 'reserved') {
+      filter.orderType = 'dine_in';
+      filter.reservation = { $ne: null };
+    } else if (category === 'delivery') {
+      filter.orderType = 'delivery';
+    }
+
     if (date) {
       const startOfDay = new Date(date as string);
       startOfDay.setHours(0, 0, 0, 0);
@@ -238,6 +250,7 @@ router.get('/admin/all', requireAdmin, async (req: AuthRequest, res: Response): 
     const orders = await Order.find(filter)
       .populate('user', 'name email phone')
       .populate('assignedTo', 'name')
+      .populate('reservation')
       .sort({ createdAt: -1 });
     res.json(orders);
   } catch (err: any) {
@@ -510,6 +523,21 @@ router.patch('/kitchen/:id/status', requireKitchen, async (req: AuthRequest, res
       const estimatedTime = new Date();
       estimatedTime.setMinutes(estimatedTime.getMinutes() + 30);
       order.estimatedDeliveryTime = estimatedTime;
+      
+      // Auto-assign to next available parcel slot (101-105) for delivery orders
+      if (order.orderType === 'delivery') {
+        const occupiedSlots = await Order.find({
+          tableNumber: { $in: [101, 102, 103, 104, 105] },
+          status: { $in: ['ready', 'out_for_delivery'] }
+        }).select('tableNumber');
+
+        const usedSlots = occupiedSlots.map(o => o.tableNumber);
+        const freeSlot = [101, 102, 103, 104, 105].find(s => !usedSlots.includes(s!));
+
+        if (freeSlot) {
+          order.tableNumber = freeSlot;
+        }
+      }
     }
 
     await order.save();

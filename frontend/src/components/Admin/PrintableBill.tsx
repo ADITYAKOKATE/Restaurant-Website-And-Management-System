@@ -1,71 +1,139 @@
 import React from 'react';
-import { AdminOrderRecord } from './adminTypes';
+import { POSActiveOrder } from './adminTypes';
 import { formatCurrency } from './adminUtils';
 
-export function PrintableBill({ order, restaurantName = "Premacha Wada" }: { order: AdminOrderRecord | null, restaurantName?: string }) {
+interface PrintableBillProps {
+  order: POSActiveOrder | null;
+  type?: 'bill' | 'kot';
+  restaurantName?: string;
+}
+
+export function PrintableBill({
+  order,
+  type = 'bill',
+  restaurantName = 'Premacha Wada',
+}: PrintableBillProps) {
   if (!order) return null;
 
+  const tableLabel = order.tableNumber >= 101
+    ? `P${order.tableNumber - 100}`
+    : `Table ${order.tableNumber}`;
+
+  const subtotal = order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+
+  if (type === 'kot') {
+    return (
+      <div style={{ fontFamily: 'monospace', maxWidth: '300px', margin: '0 auto', fontSize: '13px', padding: '8px' }}>
+        <div style={{ textAlign: 'center', borderBottom: '2px dashed #000', paddingBottom: '8px', marginBottom: '8px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', letterSpacing: '2px' }}>KOT</h3>
+          <p style={{ margin: '4px 0', fontWeight: 'bold' }}>{restaurantName}</p>
+        </div>
+        <div style={{ marginBottom: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span><strong>Token:</strong> #{order.tokenNumber}</span>
+            <span><strong>{tableLabel}</strong></span>
+          </div>
+          <div><strong>Time:</strong> {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+        <div style={{ borderTop: '1px dashed #000', paddingTop: '8px' }}>
+          {order.items.map((item, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '14px', fontWeight: 'bold' }}>
+              <span>{item.name}</span>
+              <span>x{item.quantity}</span>
+            </div>
+          ))}
+        </div>
+        {order.specialInstructions && (
+          <div style={{ marginTop: '8px', borderTop: '1px dashed #000', paddingTop: '6px', fontSize: '12px' }}>
+            <strong>Note:</strong> {order.specialInstructions}
+          </div>
+        )}
+        <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '11px' }}>
+          *** KOT — Kitchen Copy ***
+        </div>
+      </div>
+    );
+  }
+
+  // Full bill
   return (
-    <div style={{ fontFamily: 'monospace', maxWidth: '400px', margin: '0 auto', fontSize: '14px' }}>
-      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <h2 style={{ margin: 0 }}>{restaurantName}</h2>
-        <p style={{ margin: '5px 0' }}>Authentic Taste</p>
-        <p style={{ margin: '5px 0', fontSize: '12px' }}>GSTIN: 27AABCU9603R1ZX</p>
+    <div style={{ fontFamily: 'monospace', maxWidth: '380px', margin: '0 auto', fontSize: '13px', padding: '8px' }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+        <h2 style={{ margin: 0, fontSize: '20px', letterSpacing: '2px' }}>{restaurantName}</h2>
+        <p style={{ margin: '4px 0', fontSize: '12px' }}>Authentic Maharashtrian Cuisine</p>
+        <p style={{ margin: '2px 0', fontSize: '11px' }}>GSTIN: 27AABCU9603R1ZX</p>
+        <p style={{ margin: '2px 0', fontSize: '11px' }}>Tel: 07969 223344</p>
       </div>
 
-      <div style={{ borderBottom: '1px dashed #000', paddingBottom: '10px', marginBottom: '10px' }}>
-        <p style={{ margin: '2px 0' }}><strong>Order No:</strong> {order.tokenNumber || order._id.substring(0, 8)}</p>
-        <p style={{ margin: '2px 0' }}><strong>Date:</strong> {new Date(order.createdAt).toLocaleString()}</p>
-        <p style={{ margin: '2px 0' }}><strong>Type:</strong> {order.orderType.replace('_', ' ').toUpperCase()}</p>
-        {order.paymentMethod && <p style={{ margin: '2px 0' }}><strong>Payment:</strong> {order.paymentMethod.toUpperCase()}</p>}
-        {order.user?.name && <p style={{ margin: '2px 0' }}><strong>Customer:</strong> {order.user.name}</p>}
+      {/* Order Info */}
+      <div style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000', padding: '8px 0', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span><strong>Bill No:</strong> #{order.tokenNumber}</span>
+          <span><strong>{tableLabel}</strong></span>
+        </div>
+        <div><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString('en-IN')} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        {order.user?.name && <div><strong>Guest:</strong> {order.user.name}</div>}
+        <div><strong>Payment:</strong> {order.paymentMethod?.toUpperCase()}</div>
       </div>
 
-      <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+      {/* Items */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10px' }}>
         <thead>
-          <tr style={{ borderBottom: '1px dashed #000', textAlign: 'left' }}>
-            <th style={{ padding: '4px 0' }}>Item</th>
-            <th style={{ padding: '4px 0', textAlign: 'right' }}>Qty</th>
-            <th style={{ padding: '4px 0', textAlign: 'right' }}>Price</th>
-            <th style={{ padding: '4px 0', textAlign: 'right' }}>Amt</th>
+          <tr style={{ borderBottom: '1px dashed #000' }}>
+            <th style={{ textAlign: 'left', padding: '4px 2px', fontSize: '12px' }}>Item</th>
+            <th style={{ textAlign: 'center', padding: '4px 2px', fontSize: '12px' }}>Qty</th>
+            <th style={{ textAlign: 'right', padding: '4px 2px', fontSize: '12px' }}>Rate</th>
+            <th style={{ textAlign: 'right', padding: '4px 2px', fontSize: '12px' }}>Amt</th>
           </tr>
         </thead>
         <tbody>
-          {order.items.map((item, index) => (
-            <tr key={index}>
-              <td style={{ padding: '4px 0' }}>{item.name}</td>
-              <td style={{ padding: '4px 0', textAlign: 'right' }}>{item.quantity}</td>
-              <td style={{ padding: '4px 0', textAlign: 'right' }}>{formatCurrency(item.price)}</td>
-              <td style={{ padding: '4px 0', textAlign: 'right' }}>{formatCurrency(item.price * item.quantity)}</td>
+          {order.items.map((item, i) => (
+            <tr key={i}>
+              <td style={{ padding: '3px 2px' }}>{item.name}</td>
+              <td style={{ padding: '3px 2px', textAlign: 'center' }}>{item.quantity}</td>
+              <td style={{ padding: '3px 2px', textAlign: 'right' }}>{formatCurrency(item.price)}</td>
+              <td style={{ padding: '3px 2px', textAlign: 'right' }}>{formatCurrency(item.price * item.quantity)}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div style={{ borderTop: '1px dashed #000', paddingTop: '10px', marginBottom: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '2px 0' }}>
-          <span>Subtotal:</span>
-          <span>{formatCurrency(order.totalAmount - order.taxAmount - order.deliveryFee)}</span>
+      {/* Totals */}
+      <div style={{ borderTop: '1px dashed #000', paddingTop: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+          <span>Subtotal</span>
+          <span>{formatCurrency(subtotal)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '2px 0' }}>
-          <span>Tax:</span>
-          <span>{formatCurrency(order.taxAmount)}</span>
-        </div>
-        {order.deliveryFee > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', margin: '2px 0' }}>
-            <span>Delivery:</span>
-            <span>{formatCurrency(order.deliveryFee)}</span>
+        {order.taxAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+            <span>GST / Tax</span>
+            <span>{formatCurrency(order.taxAmount)}</span>
           </div>
         )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '6px 0', fontWeight: 'bold', fontSize: '16px' }}>
-          <span>Total:</span>
+        {order.discountAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+            <span>Discount</span>
+            <span>- {formatCurrency(order.discountAmount)}</span>
+          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px dashed #000', marginTop: '4px', fontWeight: 'bold', fontSize: '16px' }}>
+          <span>TOTAL</span>
           <span>{formatCurrency(order.totalAmount)}</span>
         </div>
+        {order.paymentStatus === 'paid' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#2ECC71' }}>
+            <span>✓ PAID</span>
+            <span>{formatCurrency(order.totalAmount)}</span>
+          </div>
+        )}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <p>Thank you for your visit!</p>
-        <p style={{ fontSize: '12px' }}>Please come again</p>
+      {/* Footer */}
+      <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', borderTop: '1px dashed #000', paddingTop: '10px' }}>
+        <p style={{ margin: '4px 0', fontWeight: 'bold' }}>Thank you for dining with us!</p>
+        <p style={{ margin: '2px 0' }}>Please visit again</p>
+        <p style={{ margin: '6px 0', fontSize: '11px' }}>— Premacha Wada —</p>
       </div>
     </div>
   );

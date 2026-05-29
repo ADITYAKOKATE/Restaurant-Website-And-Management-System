@@ -1,19 +1,19 @@
 import React from 'react';
 import { POSActiveOrder } from './adminTypes';
-import { useAuth } from '../../context/AuthContext';
 
 interface PrintableBillProps {
   order: POSActiveOrder | null;
   type?: 'bill' | 'kot';
   restaurantName?: string;
+  cashierName?: string;
 }
 
 export function PrintableBill({
   order,
   type = 'bill',
   restaurantName = 'HOTEL PREMACHA WADA',
+  cashierName = 'biller',
 }: PrintableBillProps) {
-  const { user } = useAuth();
   
   if (!order) return null;
 
@@ -84,7 +84,7 @@ export function PrintableBill({
           <span>Dine In: {tableLabel}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Cashier: {user?.name || 'biller'}</span>
+          <span>Cashier: {cashierName}</span>
           <span>Bill No.: {order.tokenNumber}</span>
         </div>
       </div>

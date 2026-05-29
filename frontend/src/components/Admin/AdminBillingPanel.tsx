@@ -10,6 +10,9 @@ import {
 } from './adminApi';
 import { POSTableStatus, POSActiveOrder, AdminMenuItemRecord, AdminOrderRecord } from './adminTypes';
 import { PrintableBill } from './PrintableBill';
+import { printHtmlReceipt } from './qzTrayUtils';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { useAuth } from '../../context/AuthContext';
 import styles from './Admin.module.css';
 
 type MainView = 'tables' | 'pos' | 'online';
@@ -33,6 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function AdminBillingPanel() {
+  const { user } = useAuth();
   const [view, setView] = useState<MainView>('tables');
 
   // Table grid state
@@ -56,9 +60,7 @@ export default function AdminBillingPanel() {
   const [onlineOrders, setOnlineOrders] = useState<AdminOrderRecord[]>([]);
   const [onlineLoading, setOnlineLoading] = useState(false);
 
-  // Print state
-  const [printOrder, setPrintOrder] = useState<POSActiveOrder | null>(null);
-  const [printType, setPrintType] = useState<'bill' | 'kot'>('bill');
+  // Removed old printOrder state since we print directly via QZ Tray
 
   // ── Data Loaders ──────────────────────────────────────────────────────────
   const loadTables = useCallback(async () => {
@@ -79,22 +81,7 @@ export default function AdminBillingPanel() {
     return () => clearInterval(id);
   }, [view, loadTables]);
 
-  // Print trigger
-  useEffect(() => {
-    if (!printOrder) return;
-
-    const handleAfterPrint = () => {
-      setPrintOrder(null);
-    };
-
-    window.addEventListener('afterprint', handleAfterPrint);
-    const t = setTimeout(() => { window.print(); }, 400);
-
-    return () => {
-      clearTimeout(t);
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-  }, [printOrder]);
+  // (Old print trigger useEffect removed)
 
   // ── Table Click ───────────────────────────────────────────────────────────
   const openTable = async (t: POSTableStatus) => {
@@ -178,21 +165,45 @@ export default function AdminBillingPanel() {
       if (!order) return;
       const updated = await markKOTPrinted(order._id);
       setActiveOrder(updated);
-      if (andPrint) { setPrintType('kot'); setPrintOrder(updated); }
+      if (andPrint) { 
+        try {
+          const html = renderToStaticMarkup(<PrintableBill order={updated} type="kot" cashierName={user?.name} />);
+          await printHtmlReceipt(html);
+        } catch (printErr: any) {
+          setPosError(printErr.message);
+        }
+      }
       await loadTables();
     } catch (e: any) { setPosError(e.message); }
     finally { setProcessing(false); }
   };
 
   const handlePrintBill = async () => {
-    if (!activeOrder) return;
-    setProcessing(true);
+    if (!activeOrder && pendingItems.length === 0) return;
+    setProcessing(true); setPosError(null);
     try {
-      const updated = await markBillPrinted(activeOrder._id);
-      setActiveOrder(updated);
-      setPrintType('bill');
-      setPrintOrder(updated);
-      await loadTables();
+      let currentOrder = activeOrder;
+      
+      if (pendingItems.length > 0) {
+        if (!currentOrder) {
+          currentOrder = await createPOSOrder({ tableNumber: selectedTable!, items: pendingItems, paymentMethod: payMethod, discountAmount: discount });
+        } else {
+          currentOrder = await addItemsToPOSOrder(currentOrder._id, { items: pendingItems });
+        }
+        setPendingItems([]);
+      }
+
+      if (currentOrder) {
+        const updated = await markBillPrinted(currentOrder._id);
+        setActiveOrder(updated);
+        try {
+          const html = renderToStaticMarkup(<PrintableBill order={updated} type="bill" cashierName={user?.name} />);
+          await printHtmlReceipt(html);
+        } catch (printErr: any) {
+          setPosError(printErr.message);
+        }
+        await loadTables();
+      }
     } catch (e: any) { setPosError(e.message); }
     finally { setProcessing(false); }
   };
@@ -249,11 +260,6 @@ export default function AdminBillingPanel() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* Hidden print area */}
-      <div className={styles.printArea}>
-        {printOrder && <PrintableBill order={printOrder} type={printType} />}
-      </div>
-
       {/* ── TABLE VIEW ───────────────────────────────────────────────────── */}
       {view === 'tables' && (
         <div className={styles.posTableView}>
@@ -445,7 +451,7 @@ export default function AdminBillingPanel() {
                   <button className={styles.posActionBtn} onClick={() => handleKOT(true)} disabled={processing || allDisplayItems.length === 0}>
                     KOT & Print
                   </button>
-                  <button className={`${styles.posActionBtn} ${styles.posActionBtnPrint}`} onClick={handlePrintBill} disabled={processing || !activeOrder}>
+                  <button className={`${styles.posActionBtn} ${styles.posActionBtnPrint}`} onClick={handlePrintBill} disabled={processing || (!activeOrder && allDisplayItems.length === 0)}>
                     🖨 Save & Print Bill
                   </button>
                   <button className={`${styles.posActionBtn} ${styles.posActionBtnPaid}`} onClick={handleMarkPaid} disabled={processing || !activeOrder || activeOrder.paymentStatus === 'paid'}>
@@ -530,7 +536,12 @@ export default function AdminBillingPanel() {
                               specialInstructions: order.specialInstructions, createdAt: order.createdAt,
                               user: order.user,
                             };
-                            setPrintType('bill'); setPrintOrder(pos);
+                            try {
+                              const html = renderToStaticMarkup(<PrintableBill order={pos} type="bill" cashierName={user?.name} />);
+                              printHtmlReceipt(html).catch(e => alert(e.message));
+                            } catch (e: any) {
+                              alert(e.message);
+                            }
                           }}
                         >
                           🖨 Print

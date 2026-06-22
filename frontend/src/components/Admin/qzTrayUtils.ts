@@ -19,25 +19,48 @@ export const connectQZ = async () => {
 export const printHtmlReceipt = async (htmlString: string) => {
   try {
     await connectQZ();
-    
-    // Attempt to get the default printer
+
+    // Get the default printer set in Windows
     const printer = await qz.printers.getDefault();
     if (!printer) {
       throw new Error("No default printer found in the system.");
     }
 
-    const config = qz.configs.create(printer);
-    
-    // Using 'pixel' printing for HTML format is optimal for receipts
+    // Thermal-printer-specific config
+    const config = qz.configs.create(printer, {
+      colorType: 'blackwhite', // thermal printers print black only — prevents blank output
+      margins: 0,              // no extra margins; let the HTML control spacing
+      scaleContent: true,      // scale content to fit the 80mm paper width
+    });
+
+    // QZ Tray's Chromium renderer requires a full HTML document — a bare <div>
+    // fragment causes the renderer to produce a blank page.
+    const fullHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        width: 80mm;
+        font-family: monospace;
+        font-size: 13px;
+        color: #000;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>${htmlString}</body>
+</html>`;
+
     const data = [{
       type: 'pixel',
       format: 'html',
       flavor: 'plain',
-      data: htmlString,
+      data: fullHtml,
       options: {
-        // Typical thermal printer width is 80mm
-        // Adjust if needed
-        pageWidth: 80, 
+        pageWidth: '80mm',  // MUST be a string with unit — bare number is ignored by QZ Tray
+        pageHeight: '0mm',  // 0 = auto / continuous feed (correct for thermal receipts)
       }
     }];
 

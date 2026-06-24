@@ -49,11 +49,16 @@ export default function AdminBillingPanel() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [menu, setMenu] = useState<AdminMenuItemRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [pendingItems, setPendingItems] = useState<{ menuItemId: string; quantity: number }[]>([]);
+  // pendingItems can hold catalog items (menuItemId) or custom items (isCustom)
+  const [pendingItems, setPendingItems] = useState<{ menuItemId?: string; name?: string; price?: number; quantity: number; isCustom?: boolean }[]>([]);
   const [discount, setDiscount] = useState(0);
   const [payMethod, setPayMethod] = useState<PayMethod>('cod');
   const [processing, setProcessing] = useState(false);
   const [posError, setPosError] = useState<string | null>(null);
+
+  // Custom (non-listed) item form state
+  const [customName, setCustomName] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
 
   // Online orders state
   const [onlineTab, setOnlineTab] = useState<OnlineTab>('walkin');
@@ -129,10 +134,19 @@ export default function AdminBillingPanel() {
     setProcessing(true); setPosError(null);
     try {
       let order: POSActiveOrder;
+      // Separate catalog items and custom items for the API payload
+      const catalogItems = pendingItems
+        .filter(p => !p.isCustom)
+        .map(p => ({ menuItemId: p.menuItemId!, quantity: p.quantity }));
+      const customItems = pendingItems
+        .filter(p => p.isCustom)
+        .map(p => ({ isCustom: true, name: p.name!, price: p.price!, quantity: p.quantity }));
+      const allItems = [...catalogItems, ...customItems] as any[];
+      if (allItems.length === 0) return;
       if (!activeOrder) {
-        order = await createPOSOrder({ tableNumber: selectedTable, items: pendingItems, paymentMethod: payMethod, discountAmount: discount });
+        order = await createPOSOrder({ tableNumber: selectedTable, items: allItems, paymentMethod: payMethod, discountAmount: discount });
       } else {
-        order = await addItemsToPOSOrder(activeOrder._id, { items: pendingItems });
+        order = await addItemsToPOSOrder(activeOrder._id, { items: allItems });
       }
       setActiveOrder(order);
       setPendingItems([]);
@@ -140,12 +154,38 @@ export default function AdminBillingPanel() {
     finally { setProcessing(false); }
   }, [selectedTable, activeOrder, pendingItems, payMethod, discount]);
 
-  const removeFromOrder = async (menuItemId: string, delta: number) => {
+  const removeFromOrder = async (item: { menuItem?: string; name: string; isCustom?: boolean }, delta: number) => {
     if (!activeOrder) return;
     setProcessing(true);
-    try { setActiveOrder(await removeItemFromPOSOrder(activeOrder._id, menuItemId, delta)); }
+    try {
+      const updated = await removeItemFromPOSOrder(
+        activeOrder._id,
+        item.isCustom ? null : (item.menuItem ?? null),
+        delta,
+        item.isCustom ? item.name : undefined
+      );
+      setActiveOrder(updated);
+    }
     catch (e: any) { setPosError(e.message); }
     finally { setProcessing(false); }
+  };
+
+  // Handler to add a custom non-listed item
+  const handleAddCustomItem = () => {
+    const name = customName.trim();
+    const price = parseFloat(customPrice);
+    if (!name || isNaN(price) || price <= 0) {
+      setPosError('Please enter a valid item name and price.');
+      return;
+    }
+    setPosError(null);
+    setPendingItems(prev => {
+      const ex = prev.find(p => p.isCustom && p.name === name);
+      if (ex) return prev.map(p => (p.isCustom && p.name === name) ? { ...p, quantity: p.quantity + 1 } : p);
+      return [...prev, { isCustom: true, name, price, quantity: 1 }];
+    });
+    setCustomName('');
+    setCustomPrice('');
   };
 
   const applyDiscount = async (val: number) => {
@@ -174,6 +214,11 @@ export default function AdminBillingPanel() {
         }
       }
       await loadTables();
+      // After KOT, redirect back to table view
+      setView('tables');
+      setSelectedTable(null);
+      setActiveOrder(null);
+      setPendingItems([]);
     } catch (e: any) { setPosError(e.message); }
     finally { setProcessing(false); }
   };
@@ -185,10 +230,17 @@ export default function AdminBillingPanel() {
       let currentOrder = activeOrder;
       
       if (pendingItems.length > 0) {
+        const catalogItems = pendingItems
+          .filter(p => !p.isCustom)
+          .map(p => ({ menuItemId: p.menuItemId!, quantity: p.quantity }));
+        const customItems = pendingItems
+          .filter(p => p.isCustom)
+          .map(p => ({ isCustom: true, name: p.name!, price: p.price!, quantity: p.quantity }));
+        const allItems = [...catalogItems, ...customItems] as any[];
         if (!currentOrder) {
-          currentOrder = await createPOSOrder({ tableNumber: selectedTable!, items: pendingItems, paymentMethod: payMethod, discountAmount: discount });
+          currentOrder = await createPOSOrder({ tableNumber: selectedTable!, items: allItems, paymentMethod: payMethod, discountAmount: discount });
         } else {
-          currentOrder = await addItemsToPOSOrder(currentOrder._id, { items: pendingItems });
+          currentOrder = await addItemsToPOSOrder(currentOrder._id, { items: allItems });
         }
         setPendingItems([]);
       }
@@ -235,13 +287,28 @@ export default function AdminBillingPanel() {
 
   // ── Computed order totals (merged active + pending) ───────────────────────
   const allDisplayItems = (() => {
-    const map = new Map<string, { name: string; price: number; quantity: number; menuItem: string }>();
-    activeOrder?.items.forEach(i => map.set(i.menuItem, { ...i, menuItem: i.menuItem }));
+    // Use a map keyed by menuItem ID for catalog items, or by name for custom items
+    const map = new Map<string, { name: string; price: number; quantity: number; menuItem?: string; isCustom?: boolean }>();
+    activeOrder?.items.forEach(i => {
+      const key = i.menuItem ? `catalog:${i.menuItem}` : `custom:${i.name}`;
+      map.set(key, { ...i, menuItem: i.menuItem, isCustom: !i.menuItem });
+    });
     pendingItems.forEach(p => {
-      const mItem = menu.find(m => m._id === p.menuItemId);
-      if (!mItem) return;
-      const ex = map.get(p.menuItemId);
-      map.set(p.menuItemId, ex ? { ...ex, quantity: ex.quantity + p.quantity } : { name: mItem.name, price: mItem.price, quantity: p.quantity, menuItem: p.menuItemId });
+      if (p.isCustom) {
+        const key = `custom:${p.name}`;
+        const ex = map.get(key);
+        map.set(key, ex
+          ? { ...ex, quantity: ex.quantity + p.quantity }
+          : { name: p.name!, price: p.price!, quantity: p.quantity, isCustom: true });
+      } else {
+        const mItem = menu.find(m => m._id === p.menuItemId);
+        if (!mItem) return;
+        const key = `catalog:${p.menuItemId}`;
+        const ex = map.get(key);
+        map.set(key, ex
+          ? { ...ex, quantity: ex.quantity + p.quantity }
+          : { name: mItem.name, price: mItem.price, quantity: p.quantity, menuItem: p.menuItemId });
+      }
     });
     return [...map.values()];
   })();
@@ -366,6 +433,33 @@ export default function AdminBillingPanel() {
                   {filteredItems.length === 0 && (
                     <p style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', paddingTop: '2rem' }}>No items in this category</p>
                   )}
+                  {/* ── Custom Item Card ─────────────────────────────── */}
+                  <div className={styles.posItemCard} style={{ border: '2px dashed var(--border-subtle)', background: 'var(--surface-sunken)', display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px', cursor: 'default' }}>
+                    <div className={styles.posItemName} style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '2px' }}>➕ Custom Item</div>
+                    <input
+                      type="text"
+                      placeholder="Item name"
+                      value={customName}
+                      onChange={e => setCustomName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAddCustomItem()}
+                      style={{ fontSize: '12px', padding: '4px 6px', border: '1px solid var(--border-subtle)', borderRadius: '4px', background: 'var(--surface-base)', color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price (₹)"
+                      value={customPrice}
+                      min="0"
+                      onChange={e => setCustomPrice(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleAddCustomItem()}
+                      style={{ fontSize: '12px', padding: '4px 6px', border: '1px solid var(--border-subtle)', borderRadius: '4px', background: 'var(--surface-base)', color: 'var(--text-primary)', width: '100%', boxSizing: 'border-box' }}
+                    />
+                    <button
+                      onClick={handleAddCustomItem}
+                      style={{ fontSize: '12px', padding: '5px', borderRadius: '4px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                      Add
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -388,20 +482,46 @@ export default function AdminBillingPanel() {
                     </p>
                   )}
                   {allDisplayItems.map((item, i) => {
-                    const isPending = !activeOrder?.items.find(ai => ai.menuItem === item.menuItem);
+                    const isPending = item.isCustom
+                      ? !activeOrder?.items.find(ai => !ai.menuItem && ai.name === item.name)
+                      : !activeOrder?.items.find(ai => ai.menuItem === item.menuItem);
                     return (
                       <div key={i} className={`${styles.posOrderItem} ${isPending ? styles.posOrderItemPending : ''}`}>
-                        <div className={styles.posOrderItemName}>{item.name}</div>
+                        <div className={styles.posOrderItemName}>
+                          {item.name}
+                          {item.isCustom && <span style={{ fontSize: '10px', marginLeft: '4px', opacity: 0.6 }}>(custom)</span>}
+                        </div>
                         <div className={styles.posOrderItemControls}>
-                          <button className={styles.posQtyBtn} onClick={() => activeOrder ? removeFromOrder(item.menuItem, -1) : removePending(item.menuItem)}>−</button>
+                          <button className={styles.posQtyBtn} onClick={() => {
+                            if (activeOrder) {
+                              removeFromOrder(item, -1);
+                            } else {
+                              if (item.isCustom) {
+                                setPendingItems(prev => prev
+                                  .map(p => (p.isCustom && p.name === item.name) ? { ...p, quantity: p.quantity - 1 } : p)
+                                  .filter(p => p.quantity > 0));
+                              } else {
+                                removePending(item.menuItem!);
+                              }
+                            }
+                          }}>−</button>
                           <span className={styles.posQty}>{item.quantity}</span>
                           <button className={styles.posQtyBtn} onClick={() => {
                             if (activeOrder) {
-                              addItemsToPOSOrder(activeOrder._id, { items: [{ menuItemId: item.menuItem, quantity: 1 }] })
-                                .then(setActiveOrder)
-                                .catch((e: any) => setPosError(e.message));
+                              if (item.isCustom) {
+                                addItemsToPOSOrder(activeOrder._id, { items: [{ isCustom: true, name: item.name, price: item.price, quantity: 1 } as any] })
+                                  .then(setActiveOrder).catch((e: any) => setPosError(e.message));
+                              } else {
+                                addItemsToPOSOrder(activeOrder._id, { items: [{ menuItemId: item.menuItem!, quantity: 1 }] })
+                                  .then(setActiveOrder).catch((e: any) => setPosError(e.message));
+                              }
                             } else {
-                              addPending(item.menuItem);
+                              if (item.isCustom) {
+                                setPendingItems(prev => prev.map(p =>
+                                  (p.isCustom && p.name === item.name) ? { ...p, quantity: p.quantity + 1 } : p));
+                              } else {
+                                addPending(item.menuItem!);
+                              }
                             }
                           }}>+</button>
                         </div>

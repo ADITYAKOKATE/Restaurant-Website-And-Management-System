@@ -8,7 +8,7 @@ export interface IStatusHistoryEntry {
 }
 
 export interface IOrderItem {
-  menuItem: mongoose.Types.ObjectId;
+  menuItem?: mongoose.Types.ObjectId;
   name: string;
   price: number;
   quantity: number;
@@ -68,7 +68,7 @@ const StatusHistorySchema = new Schema<IStatusHistoryEntry>(
 );
 
 const OrderItemSchema = new Schema<IOrderItem>({
-  menuItem: { type: Schema.Types.ObjectId, ref: 'MenuItem', required: true },
+  menuItem: { type: Schema.Types.ObjectId, ref: 'MenuItem', required: false, default: null },
   name: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },

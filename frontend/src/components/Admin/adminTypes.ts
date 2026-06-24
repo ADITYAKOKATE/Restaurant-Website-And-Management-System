@@ -123,11 +123,12 @@ export interface POSTableStatus {
 }
 
 export interface POSOrderItem {
-  menuItem: string;
+  menuItem?: string;       // undefined for custom non-listed items
   name: string;
   price: number;
   quantity: number;
   image: string;
+  isCustom?: boolean;      // true if this item was added manually (not from the menu catalog)
 }
 
 export interface POSActiveOrder {

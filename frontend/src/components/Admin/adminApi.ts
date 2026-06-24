@@ -352,11 +352,11 @@ export async function updatePOSDiscount(orderId: string, discountAmount: number)
   return (await response.json()).order;
 }
 
-export async function removeItemFromPOSOrder(orderId: string, menuItemId: string, delta: number): Promise<POSActiveOrder> {
+export async function removeItemFromPOSOrder(orderId: string, menuItemId: string | null, delta: number, customItemName?: string): Promise<POSActiveOrder> {
   const response = await fetch(`/api/billing/pos/order/${orderId}/remove-item`, {
     ...fetchOptions,
     method: 'PATCH',
-    body: JSON.stringify({ menuItemId, delta }),
+    body: JSON.stringify({ menuItemId, customItemName, delta }),
   });
   if (!response.ok) throw new Error('Failed to update item quantity');
   return (await response.json()).order;

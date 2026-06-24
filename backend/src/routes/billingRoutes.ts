@@ -168,16 +168,29 @@ router.post('/pos/order', requireAdmin, async (req: AuthRequest, res: Response):
     let subtotal = 0;
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId);
-      if (menuItem) {
+      if (item.isCustom) {
+        // Custom non-listed item — use name and price directly
+        if (!item.name || item.price == null) continue;
         orderItems.push({
-          menuItem: menuItem._id,
-          name: menuItem.name,
-          price: menuItem.price,
+          menuItem: null,
+          name: item.name,
+          price: Number(item.price),
           quantity: item.quantity,
-          image: menuItem.image || '',
+          image: '',
         });
-        subtotal += menuItem.price * item.quantity;
+        subtotal += Number(item.price) * item.quantity;
+      } else {
+        const menuItem = await MenuItem.findById(item.menuItemId);
+        if (menuItem) {
+          orderItems.push({
+            menuItem: menuItem._id,
+            name: menuItem.name,
+            price: menuItem.price,
+            quantity: item.quantity,
+            image: menuItem.image || '',
+          });
+          subtotal += menuItem.price * item.quantity;
+        }
       }
     }
 
@@ -252,19 +265,40 @@ router.patch('/pos/order/:orderId/add-items', requireAdmin, async (req: AuthRequ
     const settings = await getOrCreateSettings();
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId);
-      if (!menuItem) continue;
-      const existing = order.items.find((i: any) => i.menuItem.toString() === menuItem._id.toString());
-      if (existing) {
-        existing.quantity += item.quantity;
+      if (item.isCustom) {
+        // Custom non-listed item
+        if (!item.name || item.price == null) continue;
+        const existing = order.items.find(
+          (i: any) => !i.menuItem && i.name === item.name
+        );
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          order.items.push({
+            menuItem: null,
+            name: item.name,
+            price: Number(item.price),
+            quantity: item.quantity,
+            image: '',
+          } as any);
+        }
       } else {
-        order.items.push({
-          menuItem: menuItem._id,
-          name: menuItem.name,
-          price: menuItem.price,
-          quantity: item.quantity,
-          image: menuItem.image || '',
-        } as any);
+        const menuItem = await MenuItem.findById(item.menuItemId);
+        if (!menuItem) continue;
+        const existing = order.items.find(
+          (i: any) => i.menuItem && i.menuItem.toString() === menuItem._id.toString()
+        );
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          order.items.push({
+            menuItem: menuItem._id,
+            name: menuItem.name,
+            price: menuItem.price,
+            quantity: item.quantity,
+            image: menuItem.image || '',
+          } as any);
+        }
       }
     }
 
@@ -284,12 +318,17 @@ router.patch('/pos/order/:orderId/add-items', requireAdmin, async (req: AuthRequ
 // ─── PATCH /api/billing/pos/order/:orderId/remove-item ───────────────────────
 router.patch('/pos/order/:orderId/remove-item', requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { menuItemId, delta } = req.body; // delta = quantity change (+/-)
+    const { menuItemId, customItemName, delta } = req.body; // delta = quantity change (+/-)
     const order = await Order.findById(req.params.orderId);
     if (!order) { res.status(404).json({ success: false, message: 'Order not found.' }); return; }
 
     const settings = await getOrCreateSettings();
-    const itemIndex = order.items.findIndex((i: any) => i.menuItem.toString() === menuItemId);
+
+    // For custom items: match by name (no menuItem). For catalog items: match by menuItem id.
+    const itemIndex = customItemName
+      ? order.items.findIndex((i: any) => !i.menuItem && i.name === customItemName)
+      : order.items.findIndex((i: any) => i.menuItem && i.menuItem.toString() === menuItemId);
+
     if (itemIndex >= 0) {
       const newQty = order.items[itemIndex].quantity + delta;
       if (newQty <= 0) {

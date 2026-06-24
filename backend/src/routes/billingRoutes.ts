@@ -182,14 +182,18 @@ router.post('/pos/order', requireAdmin, async (req: AuthRequest, res: Response):
       } else {
         const menuItem = await MenuItem.findById(item.menuItemId);
         if (menuItem) {
+          // Allow per-order price override; fall back to catalog price
+          const unitPrice = (item.price != null && !isNaN(Number(item.price)))
+            ? Number(item.price)
+            : menuItem.price;
           orderItems.push({
             menuItem: menuItem._id,
             name: menuItem.name,
-            price: menuItem.price,
+            price: unitPrice,
             quantity: item.quantity,
             image: menuItem.image || '',
           });
-          subtotal += menuItem.price * item.quantity;
+          subtotal += unitPrice * item.quantity;
         }
       }
     }
@@ -285,16 +289,22 @@ router.patch('/pos/order/:orderId/add-items', requireAdmin, async (req: AuthRequ
       } else {
         const menuItem = await MenuItem.findById(item.menuItemId);
         if (!menuItem) continue;
+        // Allow per-order price override; fall back to catalog price
+        const unitPrice = (item.price != null && !isNaN(Number(item.price)))
+          ? Number(item.price)
+          : menuItem.price;
         const existing = order.items.find(
           (i: any) => i.menuItem && i.menuItem.toString() === menuItem._id.toString()
         );
         if (existing) {
           existing.quantity += item.quantity;
+          // If a price override is provided, apply it
+          if (item.price != null) existing.price = unitPrice;
         } else {
           order.items.push({
             menuItem: menuItem._id,
             name: menuItem.name,
-            price: menuItem.price,
+            price: unitPrice,
             quantity: item.quantity,
             image: menuItem.image || '',
           } as any);
@@ -346,6 +356,46 @@ router.patch('/pos/order/:orderId/remove-item', requireAdmin, async (req: AuthRe
   } catch (err: any) {
     console.error('Remove item error:', err);
     res.status(500).json({ success: false, message: 'Server error removing item.' });
+  }
+});
+
+// ─── PATCH /api/billing/pos/order/:orderId/update-item ──────────────────────
+// Updates the unit price of a specific item in an active order
+router.patch('/pos/order/:orderId/update-item', requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { menuItemId, customItemName, price } = req.body;
+    if (price == null || isNaN(Number(price)) || Number(price) < 0) {
+      res.status(400).json({ success: false, message: 'A valid price is required.' });
+      return;
+    }
+    const order = await Order.findById(req.params.orderId);
+    if (!order) { res.status(404).json({ success: false, message: 'Order not found.' }); return; }
+    if (['delivered', 'cancelled'].includes(order.status)) {
+      res.status(400).json({ success: false, message: 'Cannot modify a closed order.' });
+      return;
+    }
+
+    const settings = await getOrCreateSettings();
+
+    const itemIndex = customItemName
+      ? order.items.findIndex((i: any) => !i.menuItem && i.name === customItemName)
+      : order.items.findIndex((i: any) => i.menuItem && i.menuItem.toString() === menuItemId);
+
+    if (itemIndex < 0) {
+      res.status(404).json({ success: false, message: 'Item not found in order.' });
+      return;
+    }
+
+    order.items[itemIndex].price = Number(price);
+
+    const subtotal = order.items.reduce((s: number, i: any) => s + i.price * i.quantity, 0);
+    order.taxAmount = Math.round(subtotal * (settings.taxRate / 100));
+    order.totalAmount = subtotal + order.taxAmount - order.discountAmount;
+    await order.save();
+    res.json({ success: true, order });
+  } catch (err: any) {
+    console.error('Update item price error:', err);
+    res.status(500).json({ success: false, message: 'Server error updating item price.' });
   }
 });
 

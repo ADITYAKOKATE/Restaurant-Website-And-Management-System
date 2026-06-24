@@ -6,7 +6,7 @@ import {
   fetchPOSTables, fetchTableActiveOrder, fetchAdminMenu,
   createPOSOrder, addItemsToPOSOrder, removeItemFromPOSOrder,
   updatePOSDiscount, markKOTPrinted, markBillPrinted,
-  processPOSPayment, cleanPOSTable, fetchAdminOrders,
+  processPOSPayment, cleanPOSTable, fetchAdminOrders, updatePOSOrderItem,
 } from './adminApi';
 import { POSTableStatus, POSActiveOrder, AdminMenuItemRecord, AdminOrderRecord } from './adminTypes';
 import { PrintableBill } from './PrintableBill';
@@ -50,15 +50,19 @@ export default function AdminBillingPanel() {
   const [menu, setMenu] = useState<AdminMenuItemRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   // pendingItems can hold catalog items (menuItemId) or custom items (isCustom)
+  // price is the overridden unit price (optional; falls back to catalog price)
   const [pendingItems, setPendingItems] = useState<{ menuItemId?: string; name?: string; price?: number; quantity: number; isCustom?: boolean }[]>([]);
   const [discount, setDiscount] = useState(0);
   const [payMethod, setPayMethod] = useState<PayMethod>('cod');
   const [processing, setProcessing] = useState(false);
   const [posError, setPosError] = useState<string | null>(null);
 
-  // Custom (non-listed) item form state
   const [customName, setCustomName] = useState('');
   const [customPrice, setCustomPrice] = useState('');
+
+  // Price editing state
+  const [editingItemId, setEditingItemId] = useState<string | null>(null); // 'catalog:menuItemId' | 'custom:name'
+  const [tempPrice, setTempPrice] = useState('');
 
   // Online orders state
   const [onlineTab, setOnlineTab] = useState<OnlineTab>('walkin');
@@ -137,7 +141,7 @@ export default function AdminBillingPanel() {
       // Separate catalog items and custom items for the API payload
       const catalogItems = pendingItems
         .filter(p => !p.isCustom)
-        .map(p => ({ menuItemId: p.menuItemId!, quantity: p.quantity }));
+        .map(p => ({ menuItemId: p.menuItemId!, quantity: p.quantity, ...(p.price !== undefined ? { price: p.price } : {}) }));
       const customItems = pendingItems
         .filter(p => p.isCustom)
         .map(p => ({ isCustom: true, name: p.name!, price: p.price!, quantity: p.quantity }));
@@ -193,6 +197,52 @@ export default function AdminBillingPanel() {
     if (!activeOrder) return;
     try { setActiveOrder(await updatePOSDiscount(activeOrder._id, val)); }
     catch { /* silent */ }
+  };
+
+  // ── Price editing ─────────────────────────────────────────────────────────
+  const startEditPrice = (itemKey: string, currentPrice: number) => {
+    setEditingItemId(itemKey);
+    setTempPrice(String(currentPrice));
+  };
+
+  const cancelEditPrice = () => {
+    setEditingItemId(null);
+    setTempPrice('');
+  };
+
+  const handleSavePrice = async (
+    item: { name: string; price: number; quantity: number; menuItem?: string; isCustom?: boolean },
+    itemKey: string,
+    isPending: boolean
+  ) => {
+    const newPrice = parseFloat(tempPrice);
+    if (isNaN(newPrice) || newPrice < 0) {
+      setPosError('Please enter a valid price.');
+      cancelEditPrice();
+      return;
+    }
+    setPosError(null);
+
+    if (isPending) {
+      // Update price in pendingItems state directly
+      setPendingItems(prev => prev.map(p => {
+        if (item.isCustom && p.isCustom && p.name === item.name) return { ...p, price: newPrice };
+        if (!item.isCustom && !p.isCustom && p.menuItemId === item.menuItem) return { ...p, price: newPrice };
+        return p;
+      }));
+    } else if (activeOrder) {
+      // Save price override to the database
+      setProcessing(true);
+      try {
+        const payload = item.isCustom
+          ? { customItemName: item.name, price: newPrice }
+          : { menuItemId: item.menuItem!, price: newPrice };
+        const updated = await updatePOSOrderItem(activeOrder._id, payload);
+        setActiveOrder(updated);
+      } catch (e: any) { setPosError(e.message); }
+      finally { setProcessing(false); }
+    }
+    cancelEditPrice();
   };
 
   const handleKOT = async (andPrint = false) => {
@@ -485,11 +535,43 @@ export default function AdminBillingPanel() {
                     const isPending = item.isCustom
                       ? !activeOrder?.items.find(ai => !ai.menuItem && ai.name === item.name)
                       : !activeOrder?.items.find(ai => ai.menuItem === item.menuItem);
+                    const itemKey = item.isCustom ? `custom:${item.name}` : `catalog:${item.menuItem}`;
+                    const isEditingPrice = editingItemId === itemKey;
                     return (
                       <div key={i} className={`${styles.posOrderItem} ${isPending ? styles.posOrderItemPending : ''}`}>
-                        <div className={styles.posOrderItemName}>
-                          {item.name}
-                          {item.isCustom && <span style={{ fontSize: '10px', marginLeft: '4px', opacity: 0.6 }}>(custom)</span>}
+                        <div className={styles.posOrderItemInfo}>
+                          <div className={styles.posOrderItemName}>
+                            {item.name}
+                            {item.isCustom && <span style={{ fontSize: '10px', marginLeft: '4px', opacity: 0.6 }}>(custom)</span>}
+                          </div>
+                          {/* Inline price editor */}
+                          {isEditingPrice ? (
+                            <div className={styles.posPriceEditWrapper}>
+                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>₹</span>
+                              <input
+                                autoFocus
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={tempPrice}
+                                onChange={e => setTempPrice(e.target.value)}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') handleSavePrice(item, itemKey, isPending);
+                                  if (e.key === 'Escape') cancelEditPrice();
+                                }}
+                                onBlur={() => handleSavePrice(item, itemKey, isPending)}
+                                className={styles.posPriceEditInput}
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              className={styles.posEditablePrice}
+                              onClick={() => startEditPrice(itemKey, item.price)}
+                              title="Click to edit price"
+                            >
+                              ₹{item.price} each ✏
+                            </button>
+                          )}
                         </div>
                         <div className={styles.posOrderItemControls}>
                           <button className={styles.posQtyBtn} onClick={() => {

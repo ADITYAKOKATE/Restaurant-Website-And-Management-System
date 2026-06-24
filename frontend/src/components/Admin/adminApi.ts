@@ -308,7 +308,7 @@ export async function fetchTableActiveOrder(tableNumber: number): Promise<POSAct
 
 export async function createPOSOrder(payload: {
   tableNumber: number;
-  items: { menuItemId: string; quantity: number }[];
+  items: { menuItemId: string; quantity: number; price?: number }[];
   paymentMethod?: string;
   discountAmount?: number;
   specialInstructions?: string;
@@ -328,7 +328,7 @@ export async function createPOSOrder(payload: {
 
 export async function addItemsToPOSOrder(
   orderId: string,
-  payload: { items: { menuItemId: string; quantity: number }[]; discountAmount?: number }
+  payload: { items: { menuItemId?: string; quantity: number; price?: number; isCustom?: boolean; name?: string }[]; discountAmount?: number }
 ): Promise<POSActiveOrder> {
   const response = await fetch(`/api/billing/pos/order/${orderId}/add-items`, {
     ...fetchOptions,
@@ -359,6 +359,22 @@ export async function removeItemFromPOSOrder(orderId: string, menuItemId: string
     body: JSON.stringify({ menuItemId, customItemName, delta }),
   });
   if (!response.ok) throw new Error('Failed to update item quantity');
+  return (await response.json()).order;
+}
+
+export async function updatePOSOrderItem(
+  orderId: string,
+  payload: { menuItemId?: string; customItemName?: string; price: number }
+): Promise<POSActiveOrder> {
+  const response = await fetch(`/api/billing/pos/order/${orderId}/update-item`, {
+    ...fetchOptions,
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as any).message || 'Failed to update item price');
+  }
   return (await response.json()).order;
 }
 

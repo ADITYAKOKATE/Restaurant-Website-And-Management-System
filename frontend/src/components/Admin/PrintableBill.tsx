@@ -74,61 +74,59 @@ export function PrintableBill({
 
   // Full bill
   return (
-    <div style={{ fontFamily: 'monospace', width: '280px', margin: '0 auto', fontSize: '12px', padding: '4px', color: '#000', boxSizing: 'border-box' }}>
+    <div style={{ fontFamily: 'monospace', width: '280px', margin: '0 auto', fontSize: '13px', padding: '4px', color: '#000', boxSizing: 'border-box' }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '6px' }}>
-        <h2 style={{ margin: '0 0 3px 0', fontSize: '16px', fontWeight: 'bold' }}>{restaurantName}</h2>
-        <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
+        <h2 style={{ margin: '0 0 3px 0', fontSize: '17px', fontWeight: 'bold' }}>{restaurantName}</h2>
+        <div style={{ fontSize: '12px', lineHeight: '1.3' }}>
           GADE WASTI, NEXT TO PERFECT<br />
           VAJAN KATA, NAGAR ROAD,<br />
           WAGHOLI , PUNE -412207
         </div>
       </div>
 
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
-      <div style={{ padding: '2px 0', fontSize: '12px', fontWeight: 'bold' }}>
+      <div style={{ borderTop: '1px solid #000', margin: '6px 0' }}></div>
+      <div style={{ padding: '2px 0', fontSize: '13px' }}>
         Name: {order.user?.name || 'Walk-In'}
       </div>
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+      <div style={{ borderTop: '1px solid #000', margin: '6px 0' }}></div>
 
       {/* Order Info */}
-      <div style={{ marginBottom: '6px', fontSize: '11px', lineHeight: '1.4' }}>
+      <div style={{ marginBottom: '8px', fontSize: '13px', lineHeight: '1.4' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Date: {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
-          <span>Dine In: {tableLabel}</span>
+          <span>Date: {new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
+          <span style={{ fontWeight: 'bold' }}>Dine In: {order.tableNumber >= 101 ? `P${tableLabel}` : tableLabel}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '170px' }}>Cashier: {cashierName}</span>
+          <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '160px' }}>Cashier: {cashierName}</span>
           <span>Bill No.: {order.tokenNumber}</span>
         </div>
       </div>
 
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
-
       {/* Items Table */}
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px', tableLayout: 'fixed' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '6px', tableLayout: 'fixed' }}>
         <thead>
           <tr>
-            <th style={{ textAlign: 'left', width: '50%', padding: '2px 0', fontSize: '11px', fontWeight: 'bold' }}>Item</th>
-            <th style={{ textAlign: 'right', width: '12%', padding: '2px 0', fontSize: '11px', fontWeight: 'bold' }}>Qty</th>
-            <th style={{ textAlign: 'right', width: '18%', padding: '2px 0', fontSize: '11px', fontWeight: 'bold' }}>Price</th>
-            <th style={{ textAlign: 'right', width: '20%', padding: '2px 0', fontSize: '11px', fontWeight: 'bold' }}>Amount</th>
+            <th style={{ textAlign: 'left', width: '45%', padding: '2px 0', fontSize: '13px', fontWeight: 'bold' }}>Item</th>
+            <th style={{ textAlign: 'center', width: '15%', padding: '2px 0', fontSize: '13px', fontWeight: 'bold' }}>Qty.</th>
+            <th style={{ textAlign: 'right', width: '20%', padding: '2px 0', fontSize: '13px', fontWeight: 'bold' }}>Price</th>
+            <th style={{ textAlign: 'right', width: '20%', padding: '2px 0', fontSize: '13px', fontWeight: 'bold' }}>Amount</th>
           </tr>
         </thead>
         <tbody>
-          <tr style={{ borderTop: '1px dashed #000' }}><td colSpan={4} style={{ padding: 0 }}></td></tr>
+          <tr style={{ borderTop: '1px solid #000' }}><td colSpan={4} style={{ padding: 0, height: '4px' }}></td></tr>
           {order.items.map((item, i) => (
             <tr key={i}>
-              <td style={{ padding: '3px 0', width: '50%', textAlign: 'left', wordBreak: 'break-word', verticalAlign: 'top' }}>
+              <td style={{ padding: '3px 0', width: '45%', textAlign: 'left', wordBreak: 'break-word', verticalAlign: 'top', fontSize: '13px' }}>
                 {item.name}
               </td>
-              <td style={{ padding: '3px 0', width: '12%', textAlign: 'right', verticalAlign: 'top' }}>
+              <td style={{ padding: '3px 0', width: '15%', textAlign: 'center', verticalAlign: 'top', fontSize: '13px' }}>
                 {item.quantity}
               </td>
-              <td style={{ padding: '3px 0', width: '18%', textAlign: 'right', verticalAlign: 'top' }}>
+              <td style={{ padding: '3px 0', width: '20%', textAlign: 'right', verticalAlign: 'top', fontSize: '13px' }}>
                 {item.price.toFixed(2)}
               </td>
-              <td style={{ padding: '3px 0', width: '20%', textAlign: 'right', verticalAlign: 'top' }}>
+              <td style={{ padding: '3px 0', width: '20%', textAlign: 'right', verticalAlign: 'top', fontSize: '13px' }}>
                 {(item.price * item.quantity).toFixed(2)}
               </td>
             </tr>
@@ -136,14 +134,14 @@ export function PrintableBill({
         </tbody>
       </table>
 
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+      <div style={{ borderTop: '1px solid #000', margin: '4px 0' }}></div>
 
       {/* Totals Summary */}
-      <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
+      <div style={{ fontSize: '13px', lineHeight: '1.4', fontWeight: 'bold' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
           <span>Total Qty: {totalQty}</span>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <span>Sub Total:</span>
+          <div style={{ display: 'flex', gap: '15px' }}>
+            <span>Sub Total</span>
             <span>{subtotal.toFixed(2)}</span>
           </div>
         </div>
@@ -152,8 +150,8 @@ export function PrintableBill({
         {order.discountAmount > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
             <span></span>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <span>Discount:</span>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <span>Discount</span>
               <span>- {order.discountAmount.toFixed(2)}</span>
             </div>
           </div>
@@ -163,26 +161,26 @@ export function PrintableBill({
         {order.taxAmount > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
             <span></span>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <span>GST:</span>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <span>GST</span>
               <span>+ {order.taxAmount.toFixed(2)}</span>
             </div>
           </div>
         )}
       </div>
 
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+      <div style={{ borderTop: '1px solid #000', margin: '4px 0' }}></div>
 
       {/* Grand Total */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '15px', fontWeight: 'bold' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 0', fontSize: '16px', fontWeight: 'bold', gap: '30px' }}>
         <span>Grand Total</span>
         <span>₹ {order.totalAmount.toFixed(2)}</span>
       </div>
 
-      <div style={{ borderTop: '1px dashed #000', margin: '4px 0' }}></div>
+      <div style={{ borderTop: '1px solid #000', margin: '4px 0' }}></div>
 
       {/* Footer */}
-      <div style={{ textAlign: 'center', marginTop: '10px', fontWeight: 'bold', fontSize: '12px' }}>
+      <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '13px' }}>
         THANK YOU VISIT AGAIN !!
       </div>
     </div>

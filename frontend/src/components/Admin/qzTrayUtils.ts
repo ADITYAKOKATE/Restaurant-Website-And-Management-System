@@ -23,6 +23,42 @@ export const connectQZ = async () => {
   }
 };
 
+/**
+ * Prints raw ESC/POS commands directly — no HTML rendering, no rasterization.
+ * The printer draws its own built-in font glyphs at full darkness, which is
+ * what avoids the faded/greyish output that rasterized HTML printing produces
+ * on thermal printers. Use with escposUtils.ts (buildBillEscPos / buildKotEscPos).
+ */
+export const printRawReceipt = async (escposString: string) => {
+  try {
+    await connectQZ();
+
+    const printer = await qz.printers.getDefault();
+
+    if (!printer) {
+      throw new Error("No default printer found.");
+    }
+
+    // No pixel/rasterize options here — this is a raw passthrough config.
+    const config = qz.configs.create(printer);
+
+    const data = [
+      {
+        type: "raw",
+        format: "plain",
+        data: escposString,
+      },
+    ];
+
+    await qz.print(config, data as any);
+
+    console.log("Printed Successfully (raw ESC/POS)");
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error.message || "Printing Failed");
+  }
+};
+
 export const printHtmlReceipt = async (htmlString: string) => {
   try {
     await connectQZ();

@@ -7,12 +7,19 @@ export const connectQZ = async () => {
     isConnected = true;
     return;
   }
+
   try {
-    await qz.websocket.connect({ retries: 2, delay: 1 });
+    await qz.websocket.connect({
+      retries: 2,
+      delay: 1,
+    });
+
     isConnected = true;
   } catch (error) {
     console.error("Failed to connect to QZ Tray", error);
-    throw new Error("Could not connect to QZ Tray. Please ensure the QZ Tray application is running on your machine.");
+    throw new Error(
+      "Could not connect to QZ Tray. Please ensure the QZ Tray application is running."
+    );
   }
 };
 
@@ -20,57 +27,119 @@ export const printHtmlReceipt = async (htmlString: string) => {
   try {
     await connectQZ();
 
-    // Get the default printer set in Windows
     const printer = await qz.printers.getDefault();
+
     if (!printer) {
-      throw new Error("No default printer found in the system.");
+      throw new Error("No default printer found.");
     }
 
-    // Thermal-printer-specific config
     const config = qz.configs.create(printer, {
-  colorType: 'blackwhite',
-  margins: 0,
-  scaleContent: false,
-  density: 203,
-  interpolation: false,
-  rasterize: true
-  });
+      colorType: "blackwhite",
+      margins: 0,
 
-    // QZ Tray's Chromium renderer requires a full HTML document — a bare <div>
-    // fragment causes the renderer to produce a blank page.
-    const fullHtml = `<!DOCTYPE html>
+      // Changed
+      scaleContent: false,
+
+      // Try native printer resolution
+      density: 203,
+
+      // Better rendering
+      interpolation: false,
+
+      rasterize: true,
+    });
+
+    const fullHtml = `
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        width: 80mm;
-        font-family: monospace;
-        font-size: 13px;
-        color: #000;
-        background: #fff;
-      }
-    </style>
-  </head>
-  <body>${htmlString}</body>
-</html>`;
+<head>
+<meta charset="utf-8"/>
 
-    const data = [{
-      type: 'pixel',
-      format: 'html',
-      flavor: 'plain',
-      data: fullHtml,
-      options: {
-        pageWidth: '80mm',  // MUST be a string with unit — bare number is ignored by QZ Tray
-        pageHeight: '0mm',  // 0 = auto / continuous feed (correct for thermal receipts)
-      }
-    }];
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+
+    color:#000 !important;
+    font-weight:700 !important;
+
+    -webkit-font-smoothing:none;
+    text-rendering:geometricPrecision;
+}
+
+html{
+    width:80mm;
+}
+
+body{
+
+    width:80mm;
+
+    font-family:"Courier New", monospace;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    background:#fff;
+
+    color:#000;
+
+    image-rendering:pixelated;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+td,th{
+
+    font-size:15px !important;
+
+    font-weight:700 !important;
+
+}
+
+h1,h2,h3,h4,h5,h6{
+
+    font-weight:900 !important;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+${htmlString}
+
+</body>
+
+</html>
+`;
+
+    const data = [
+      {
+        type: "pixel",
+        format: "html",
+        flavor: "plain",
+        data: fullHtml,
+        options: {
+          pageWidth: "80mm",
+          pageHeight: "0mm",
+        },
+      },
+    ];
 
     await qz.print(config, data as any);
-    console.log("Print job sent successfully to:", printer);
+
+    console.log("Printed Successfully");
   } catch (error: any) {
-    console.error("Print failed", error);
-    throw new Error(error.message || "Failed to print receipt.");
+    console.error(error);
+    throw new Error(error.message || "Printing Failed");
   }
 };

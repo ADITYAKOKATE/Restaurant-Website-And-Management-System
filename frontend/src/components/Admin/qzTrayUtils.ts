@@ -28,10 +28,13 @@ export const printHtmlReceipt = async (htmlString: string) => {
 
     // Thermal-printer-specific config
     const config = qz.configs.create(printer, {
-      colorType: 'blackwhite', // thermal printers print black only — prevents blank output
-      margins: 0,              // no extra margins; let the HTML control spacing
-      scaleContent: true,      // scale content to fit the 80mm paper width
-    });
+  colorType: 'blackwhite',
+  margins: 0,
+  scaleContent: false,
+  density: 203,
+  interpolation: false,
+  rasterize: true
+  });
 
     // QZ Tray's Chromium renderer requires a full HTML document — a bare <div>
     // fragment causes the renderer to produce a blank page.

@@ -13,7 +13,7 @@ const BOLD_ON = ESC + 'E' + '\x01';
 const BOLD_OFF = ESC + 'E' + '\x00';
 const DOUBLE_ON = GS + '!' + '\x11'; // double width + double height
 const DOUBLE_OFF = GS + '!' + '\x00';
-const FEED_CUT = '\n\n\n' + GS + 'V' + '\x42' + '\x00'; // feed + partial cut
+const FEED_CUT = '\n\n\n' + GS + 'V' + '\x42' + '\x00'; 
 
 
 export const LINE_WIDTH = 42;

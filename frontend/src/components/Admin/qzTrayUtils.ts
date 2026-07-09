@@ -79,9 +79,6 @@ export const printHtmlReceipt = async (htmlString: string) => {
       // Try native printer resolution
       density: 203,
 
-      // Better rendering
-      interpolation: false,
-
       rasterize: true,
     });
 

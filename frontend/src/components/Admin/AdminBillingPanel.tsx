@@ -9,9 +9,8 @@ import {
   processPOSPayment, cleanPOSTable, fetchAdminOrders, updatePOSOrderItem,
 } from './adminApi';
 import { POSTableStatus, POSActiveOrder, AdminMenuItemRecord, AdminOrderRecord } from './adminTypes';
-import { PrintableBill } from './PrintableBill';
-import { printHtmlReceipt } from './qzTrayUtils';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { printRawReceipt } from './qzTrayUtils';
+import { buildKotEscPos, buildBillEscPos } from './escposUtils';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Admin.module.css';
 
@@ -257,8 +256,8 @@ export default function AdminBillingPanel() {
       setActiveOrder(updated);
       if (andPrint) { 
         try {
-          const html = renderToStaticMarkup(<PrintableBill order={updated} type="kot" cashierName={user?.name} />);
-          await printHtmlReceipt(html);
+          const escpos = buildKotEscPos(updated);
+          await printRawReceipt(escpos);
         } catch (printErr: any) {
           setPosError(printErr.message);
         }
@@ -299,8 +298,8 @@ export default function AdminBillingPanel() {
         const updated = await markBillPrinted(currentOrder._id);
         setActiveOrder(updated);
         try {
-          const html = renderToStaticMarkup(<PrintableBill order={updated} type="bill" cashierName={user?.name} />);
-          await printHtmlReceipt(html);
+          const escpos = buildBillEscPos(updated, undefined, user?.name);
+          await printRawReceipt(escpos);
         } catch (printErr: any) {
           setPosError(printErr.message);
         }
@@ -739,8 +738,8 @@ export default function AdminBillingPanel() {
                               user: order.user,
                             };
                             try {
-                              const html = renderToStaticMarkup(<PrintableBill order={pos} type="bill" cashierName={user?.name} />);
-                              printHtmlReceipt(html).catch(e => alert(e.message));
+                              const escpos = buildBillEscPos(pos, undefined, user?.name);
+                              printRawReceipt(escpos).catch(e => alert(e.message));
                             } catch (e: any) {
                               alert(e.message);
                             }

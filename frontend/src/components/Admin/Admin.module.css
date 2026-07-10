@@ -1551,11 +1551,11 @@
 .posCategories {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  padding: 12px 8px;
+  padding: 16px 12px;
   overflow-y: auto;
 }
 
@@ -1565,16 +1565,19 @@
   letter-spacing: 0.16em;
   color: var(--text-muted);
   padding: 4px 10px 8px;
+  flex-shrink: 0;
 }
 
 .posCategoryBtn {
-  padding: 10px 12px;
+  flex-shrink: 0;
+  padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
+  line-height: 1.4;
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;

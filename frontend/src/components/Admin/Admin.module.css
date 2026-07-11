@@ -8,8 +8,6 @@
   color: var(--text-primary);
 }
 
-.shellCollapsed {}
-
 .shellMain {
   min-width: 0;
   padding: 24px;
@@ -1958,3 +1956,153 @@
     display: none !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   POS MENU ITEM SEARCH
+═══════════════════════════════════════════════════════════════════ */
+.posSearchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.posSearchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.posSearchWrapper:focus-within .posSearchIcon {
+  color: var(--primary);
+}
+
+.posSearchInput {
+  width: 100%;
+  padding: 10px 36px 10px 38px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.posSearchInput::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.posSearchInput:focus {
+  border-color: rgba(255, 107, 53, 0.5);
+  background: rgba(255, 107, 53, 0.05);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.12);
+}
+
+.posSearchClear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.posSearchClear:hover {
+  background: rgba(255, 107, 53, 0.2);
+  color: var(--primary);
+}
+
+.posSearchBadge {
+  position: absolute;
+  right: 36px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(255, 107, 53, 0.15);
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ONLINE ORDERS SEARCH
+═══════════════════════════════════════════════════════════════════ */
+.onlineSearchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.onlineSearchInput {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.onlineSearchInput::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.onlineSearchInput:focus {
+  border-color: rgba(255, 107, 53, 0.5);
+  background: rgba(255, 107, 53, 0.05);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.12);
+}
+
+.onlineSearchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.onlineSearchWrapper:focus-within .onlineSearchIcon {
+  color: var(--primary);
+}
+

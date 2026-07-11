@@ -26,6 +26,7 @@ export default function MenuPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [dietaryPreference, setDietaryPreference] = useState<'All' | 'Veg' | 'Non-Veg'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -67,13 +68,30 @@ export default function MenuPage() {
     showToast(`Added ${item.name} to cart!`, 'success');
   };
 
+  // When the user types in the search box, reset the category filter to 'All'
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (val.trim()) setActiveCategory('All');
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   const filteredItems = items.filter(item => {
+    const q = searchQuery.trim().toLowerCase();
+    const searchMatch = !q ||
+      item.name.toLowerCase().includes(q) ||
+      (item.description && item.description.toLowerCase().includes(q));
     const categoryMatch = activeCategory === 'All' || item.category === activeCategory;
     const dietaryMatch = dietaryPreference === 'All' || 
                          (dietaryPreference === 'Veg' && item.isVeg) || 
                          (dietaryPreference === 'Non-Veg' && !item.isVeg);
-    return categoryMatch && dietaryMatch;
+    return searchMatch && categoryMatch && dietaryMatch;
   });
+
+  const isSearchActive = searchQuery.trim().length > 0;
 
   return (
     <main className="page-content section">
@@ -110,6 +128,45 @@ export default function MenuPage() {
           <div style={{ display: 'flex', gap: 'var(--space-xl)', flexDirection: 'column' }}>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+
+              {/* ── Search Bar ── */}
+              <div className="menu-search-wrapper">
+                <span className="menu-search-icon">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </span>
+                <input
+                  id="menu-search"
+                  type="text"
+                  className="menu-search-input"
+                  placeholder="Search dishes, ingredients…"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  autoComplete="off"
+                  aria-label="Search menu items"
+                />
+                {isSearchActive && (
+                  <button
+                    className="menu-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {/* Search results hint */}
+              {isSearchActive && (
+                <p className="menu-search-results-hint">
+                  {filteredItems.length === 0
+                    ? `No results for "${searchQuery.trim()}"`
+                    : `${filteredItems.length} result${filteredItems.length !== 1 ? 's' : ''} for "${searchQuery.trim()}"`}
+                </p>
+              )}
+
               {/* Category Filter Pills */}
               <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {categories.map((cat) => (
@@ -117,7 +174,7 @@ export default function MenuPage() {
                     key={cat}
                     className={`btn ${activeCategory === cat ? 'btn-primary' : 'btn-ghost'}`}
                     style={{ padding: '8px 16px', textTransform: 'capitalize' }}
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
                   >
                     {cat}
                   </button>
@@ -152,50 +209,67 @@ export default function MenuPage() {
 
             {/* Menu Grid */}
             <div className="grid-3">
-              {filteredItems.map((item) => (
-                <div key={item._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: '0', overflow: 'hidden' }}>
-                  
-                  <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                      loading="lazy"
-                    />
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
-                      {item.isVeg ? (
-                        <span className="badge badge-veg">VEG</span>
-                      ) : (
-                        <span className="badge" style={{ background: 'rgba(255, 71, 87, 0.15)', color: '#FF4757', border: '1px solid rgba(255, 71, 87, 0.3)' }}>NON-VEG</span>
-                      )}
-                      {item.isBestseller && <span className="badge badge-bestseller">BESTSELLER</span>}
-                    </div>
-                  </div>
-
-                  <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-sm)' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: 600 }}>{item.name}</h3>
-                      <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--secondary)' }}>₹{item.price}</span>
-                    </div>
-                    
-                    {item.description && (
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
-                        {item.description}
-                      </p>
-                    )}
-                    
-                    <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)' }}>
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ width: '100%' }}
-                        onClick={() => handleAddToCart(item)}
-                      >
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
+              {filteredItems.length === 0 ? (
+                <div className="menu-no-results">
+                  <span className="menu-no-results-emoji">🔍</span>
+                  <p className="menu-no-results-title">No dishes found</p>
+                  <p className="menu-no-results-sub">
+                    {isSearchActive
+                      ? `Try a different keyword or browse by category below.`
+                      : `No items available in this category.`}
+                  </p>
+                  {isSearchActive && (
+                    <button className="btn btn-ghost" onClick={clearSearch}>
+                      Clear Search
+                    </button>
+                  )}
                 </div>
-              ))}
+              ) : (
+                filteredItems.map((item) => (
+                  <div key={item._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: '0', overflow: 'hidden' }}>
+                    
+                    <div style={{ position: 'relative', height: '220px', width: '100%' }}>
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        loading="lazy"
+                      />
+                      <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
+                        {item.isVeg ? (
+                          <span className="badge badge-veg">VEG</span>
+                        ) : (
+                          <span className="badge" style={{ background: 'rgba(255, 71, 87, 0.15)', color: '#FF4757', border: '1px solid rgba(255, 71, 87, 0.3)' }}>NON-VEG</span>
+                        )}
+                        {item.isBestseller && <span className="badge badge-bestseller">BESTSELLER</span>}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-sm)' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 600 }}>{item.name}</h3>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--secondary)' }}>₹{item.price}</span>
+                      </div>
+                      
+                      {item.description && (
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
+                          {item.description}
+                        </p>
+                      )}
+                      
+                      <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)' }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ width: '100%' }}
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
           </div>

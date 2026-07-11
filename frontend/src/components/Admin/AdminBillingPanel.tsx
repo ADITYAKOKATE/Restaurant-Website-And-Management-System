@@ -48,6 +48,8 @@ export default function AdminBillingPanel() {
   const [orderLoading, setOrderLoading] = useState(false);
   const [menu, setMenu] = useState<AdminMenuItemRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
+  const [onlineSearchQuery, setOnlineSearchQuery] = useState('');
   // pendingItems can hold catalog items (menuItemId) or custom items (isCustom)
   // price is the overridden unit price (optional; falls back to catalog price)
   const [pendingItems, setPendingItems] = useState<{ menuItemId?: string; name?: string; price?: number; quantity: number; isCustom?: boolean }[]>([]);
@@ -114,7 +116,28 @@ export default function AdminBillingPanel() {
 
   // ── Menu helpers ──────────────────────────────────────────────────────────
   const categories = [...new Set(menu.map(i => i.category))];
-  const filteredItems = menu.filter(i => i.category === selectedCategory && i.isAvailable);
+
+  // POS item search: when a query is active, search across ALL categories; otherwise use selectedCategory
+  const filteredItems = (() => {
+    const q = menuSearchQuery.trim().toLowerCase();
+    if (q) {
+      return menu.filter(i => i.isAvailable && i.name.toLowerCase().includes(q));
+    }
+    return menu.filter(i => i.category === selectedCategory && i.isAvailable);
+  })();
+
+  // ── Online orders search ───────────────────────────────────────────────────
+  const filteredOnlineOrders = onlineOrders.filter(order => {
+    const q = onlineSearchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(order.tokenNumber).includes(q) ||
+      (order.user?.name || '').toLowerCase().includes(q) ||
+      order.orderType.toLowerCase().includes(q) ||
+      (order.paymentStatus || '').toLowerCase().includes(q) ||
+      (order.paymentMethod || '').toLowerCase().includes(q)
+    );
+  });
 
   const getPendingQty = (menuItemId: string) => pendingItems.find(p => p.menuItemId === menuItemId)?.quantity || 0;
 
@@ -454,8 +477,8 @@ export default function AdminBillingPanel() {
                 {categories.map(cat => (
                   <button
                     key={cat}
-                    className={`${styles.posCategoryBtn} ${selectedCategory === cat ? styles.posCategoryBtnActive : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    className={`${styles.posCategoryBtn} ${selectedCategory === cat && !menuSearchQuery ? styles.posCategoryBtnActive : ''}`}
+                    onClick={() => { setSelectedCategory(cat); setMenuSearchQuery(''); }}
                   >
                     {cat}
                   </button>
@@ -464,6 +487,39 @@ export default function AdminBillingPanel() {
 
               {/* CENTER — Items */}
               <div className={styles.posItems}>
+                {/* ── Search Box ─────────────────────────────────────── */}
+                <div className={styles.posSearchWrapper}>
+                  <span className={styles.posSearchIcon}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                  </span>
+                  <input
+                    id="pos-menu-search"
+                    type="text"
+                    className={styles.posSearchInput}
+                    placeholder="Search all items…"
+                    value={menuSearchQuery}
+                    onChange={e => setMenuSearchQuery(e.target.value)}
+                    autoComplete="off"
+                    aria-label="Search menu items"
+                  />
+                  {menuSearchQuery && (
+                    <>
+                      <span className={styles.posSearchBadge}>
+                        {filteredItems.length} found
+                      </span>
+                      <button
+                        className={styles.posSearchClear}
+                        onClick={() => setMenuSearchQuery('')}
+                        aria-label="Clear search"
+                        title="Clear search"
+                      >
+                        ×
+                      </button>
+                    </>
+                  )}
+                </div>
                 <div className={styles.posItemsGrid}>
                   {filteredItems.map(item => {
                     const qty = getPendingQty(item._id);
@@ -480,7 +536,9 @@ export default function AdminBillingPanel() {
                     );
                   })}
                   {filteredItems.length === 0 && (
-                    <p style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', paddingTop: '2rem' }}>No items in this category</p>
+                    <p style={{ color: 'var(--text-muted)', gridColumn: '1/-1', textAlign: 'center', paddingTop: '2rem' }}>
+                      {menuSearchQuery.trim() ? `No items matching "${menuSearchQuery.trim()}"` : 'No items in this category'}
+                    </p>
                   )}
                   {/* ── Custom Item Card ─────────────────────────────── */}
                   <div className={styles.posItemCard} style={{ border: '2px dashed var(--border-subtle)', background: 'var(--surface-sunken)', display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px', cursor: 'default' }}>
@@ -678,7 +736,25 @@ export default function AdminBillingPanel() {
               <p className={styles.heroEyebrow}>Billing</p>
               <h2 className={styles.heroTitle} style={{ margin: '6px 0' }}>Orders List</h2>
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Orders search */}
+              <div className={styles.onlineSearchWrapper}>
+                <span className={styles.onlineSearchIcon}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </span>
+                <input
+                  id="orders-search"
+                  type="text"
+                  className={styles.onlineSearchInput}
+                  placeholder="Search token, customer…"
+                  value={onlineSearchQuery}
+                  onChange={e => setOnlineSearchQuery(e.target.value)}
+                  autoComplete="off"
+                  aria-label="Search orders"
+                />
+              </div>
               <button className={styles.ghostButton} onClick={() => loadOnlineOrders(onlineTab)} style={{ padding: '10px 14px' }}>↻ Refresh</button>
               <button className={styles.primaryButton} onClick={() => setView('tables')} style={{ padding: '10px 16px' }}>← Table View</button>
             </div>
@@ -708,7 +784,7 @@ export default function AdminBillingPanel() {
                   </tr>
                 </thead>
                 <tbody>
-                  {onlineOrders.map(order => (
+                  {filteredOnlineOrders.map(order => (
                     <tr key={order._id}>
                       <td><strong>#{order.tokenNumber}</strong></td>
                       <td style={{ fontSize: '12px' }}>{new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
@@ -750,8 +826,10 @@ export default function AdminBillingPanel() {
                       </td>
                     </tr>
                   ))}
-                  {onlineOrders.length === 0 && (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No orders found</td></tr>
+                  {filteredOnlineOrders.length === 0 && (
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                      {onlineSearchQuery.trim() ? `No orders matching "${onlineSearchQuery.trim()}"` : 'No orders found'}
+                    </td></tr>
                   )}
                 </tbody>
               </table>

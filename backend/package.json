@@ -10,7 +10,8 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "npx ts-node src/scripts/seed.ts"
+    "seed": "npx ts-node src/scripts/seed.ts",
+    "update-images": "ts-node src/scripts/update_menu_images.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -20,12 +20,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Support comma-separated list of allowed origins e.g.
-// FRONTEND_URL=http://localhost:3000,https://your-app.vercel.app
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+// Support comma-separated list of allowed origins
+const envOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/$/, '')) // Remove trailing slash if any
   .filter(Boolean);
+
+// Add known production domains as fallback to prevent CORS 500 errors via Next.js proxy
+const defaultProdOrigins = [
+  'https://premachawada.in',
+  'https://www.premachawada.in',
+  'https://premacha-wada-website.vercel.app'
+];
+
+const allowedOrigins = Array.from(new Set([...envOrigins, ...defaultProdOrigins]));
 
 // ─────────────────────────────────────────────
 // Middleware
@@ -35,7 +43,7 @@ app.use(cors({
     // Allow requests with no origin (e.g. Render health checks, mobile)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error(`CORS: origin '${origin}' not allowed`));
+    callback(null, false); // By passing false, it will fail CORS without throwing a 500 error
   },
   credentials: true, // Allow cookies to pass through
 }));

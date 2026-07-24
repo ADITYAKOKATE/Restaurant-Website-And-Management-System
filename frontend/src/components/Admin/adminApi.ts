@@ -48,8 +48,16 @@ function mapSettingsToApi(settings: AdminSettingsState): AdminSettingsApiPayload
 // ORDER APIs
 // ─────────────────────────────────────────────
 export async function fetchAdminOrders(category?: string): Promise<AdminOrderRecord[]> {
-  const url = category ? `/api/orders/admin/all?category=${category}` : '/api/orders/admin/all';
-  const response = await fetch(url, { credentials: 'include' });
+  const url = category ? `/api/orders/admin/all?category=${category}&_t=${Date.now()}` : `/api/orders/admin/all?_t=${Date.now()}`;
+  const response = await fetch(url, { 
+    credentials: 'include',
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
   if (!response.ok) {
     throw new Error('Failed to load admin orders');
   }

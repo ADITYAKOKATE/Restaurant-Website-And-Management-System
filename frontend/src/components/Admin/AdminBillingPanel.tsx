@@ -62,8 +62,13 @@ export default function AdminBillingPanel() {
   const [customPrice, setCustomPrice] = useState('');
 
   // Price editing state
-  const [editingItemId, setEditingItemId] = useState<string | null>(null); // 'catalog:menuItemId' | 'custom:name'
-  const [tempPrice, setTempPrice] = useState('');
+  const [priceModal, setPriceModal] = useState<{
+    item: any;
+    itemKey: string;
+    isPending: boolean;
+    price: string;
+  } | null>(null);
+
 
   // Online orders state
   const [onlineTab, setOnlineTab] = useState<OnlineTab>('walkin');
@@ -222,25 +227,16 @@ export default function AdminBillingPanel() {
   };
 
   // ── Price editing ─────────────────────────────────────────────────────────
-  const startEditPrice = (itemKey: string, currentPrice: number) => {
-    setEditingItemId(itemKey);
-    setTempPrice(String(currentPrice));
-  };
-
-  const cancelEditPrice = () => {
-    setEditingItemId(null);
-    setTempPrice('');
-  };
-
   const handleSavePrice = async (
     item: { name: string; price: number; quantity: number; menuItem?: string; isCustom?: boolean },
     itemKey: string,
-    isPending: boolean
+    isPending: boolean,
+    newPriceStr: string
   ) => {
-    const newPrice = parseFloat(tempPrice);
+    const newPrice = parseFloat(newPriceStr);
     if (isNaN(newPrice) || newPrice < 0) {
       setPosError('Please enter a valid price.');
-      cancelEditPrice();
+      setPriceModal(null);
       return;
     }
     setPosError(null);
@@ -264,7 +260,7 @@ export default function AdminBillingPanel() {
       } catch (e: any) { setPosError(e.message); }
       finally { setProcessing(false); }
     }
-    cancelEditPrice();
+    setPriceModal(null);
   };
 
   const handleKOT = async (andPrint = false) => {
@@ -404,9 +400,11 @@ export default function AdminBillingPanel() {
         <div className={styles.posTableView}>
           {/* Header */}
           <div className={styles.posTableHeader}>
-            <div>
-              <p className={styles.heroEyebrow}>Restaurant POS</p>
-              <h2 className={styles.heroTitle} style={{ margin: '6px 0' }}>Table View</h2>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div>
+                <p className={styles.heroEyebrow}>Restaurant POS</p>
+                <h2 className={styles.heroTitle} style={{ margin: '6px 0' }}>Table View</h2>
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <div className={styles.posLegend}>
@@ -593,7 +591,6 @@ export default function AdminBillingPanel() {
                       ? !activeOrder?.items.find(ai => !ai.menuItem && ai.name === item.name)
                       : !activeOrder?.items.find(ai => ai.menuItem === item.menuItem);
                     const itemKey = item.isCustom ? `custom:${item.name}` : `catalog:${item.menuItem}`;
-                    const isEditingPrice = editingItemId === itemKey;
                     return (
                       <div key={i} className={`${styles.posOrderItem} ${isPending ? styles.posOrderItemPending : ''}`}>
                         <div className={styles.posOrderItemInfo}>
@@ -601,34 +598,9 @@ export default function AdminBillingPanel() {
                             {item.name}
                             {item.isCustom && <span style={{ fontSize: '10px', marginLeft: '4px', opacity: 0.6 }}>(custom)</span>}
                           </div>
-                          {/* Inline price editor */}
-                          {isEditingPrice ? (
-                            <div className={styles.posPriceEditWrapper}>
-                              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>₹</span>
-                              <input
-                                autoFocus
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={tempPrice}
-                                onChange={e => setTempPrice(e.target.value)}
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') handleSavePrice(item, itemKey, isPending);
-                                  if (e.key === 'Escape') cancelEditPrice();
-                                }}
-                                onBlur={() => handleSavePrice(item, itemKey, isPending)}
-                                className={styles.posPriceEditInput}
-                              />
-                            </div>
-                          ) : (
-                            <button
-                              className={styles.posEditablePrice}
-                              onClick={() => startEditPrice(itemKey, item.price)}
-                              title="Click to edit price"
-                            >
-                              ₹{item.price} each ✏
-                            </button>
-                          )}
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            ₹{item.price} each
+                          </div>
                         </div>
                         <div className={styles.posOrderItemControls}>
                           <button className={styles.posQtyBtn} onClick={() => {
@@ -664,7 +636,21 @@ export default function AdminBillingPanel() {
                             }
                           }}>+</button>
                         </div>
-                        <div className={styles.posOrderItemAmt}>{formatCurrency(item.price * item.quantity)}</div>
+                        <div 
+                          className={styles.posOrderItemAmt}
+                          onDoubleClick={() => {
+                            setPriceModal({
+                              item,
+                              itemKey,
+                              isPending,
+                              price: item.price.toString()
+                            });
+                          }}
+                          title="Double-click to edit price"
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          {formatCurrency(item.price * item.quantity)}
+                        </div>
                       </div>
                     );
                   })}
@@ -837,6 +823,86 @@ export default function AdminBillingPanel() {
           )}
         </div>
       )}
+      {/* Price Edit Modal */}
+      {priceModal && (
+        <div 
+          onClick={() => setPriceModal(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            style={{
+              backgroundColor: 'var(--surface-base, #1c1c1e)',
+              border: '1px solid var(--border-subtle, #333)',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '400px',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+              color: 'var(--text-primary, #fff)'
+            }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: '8px', fontSize: '20px', fontWeight: '600' }}>Edit Price</h3>
+            <p style={{ margin: '0 0 20px 0', color: 'var(--text-muted, #aaa)', fontSize: '14px' }}>
+              Enter new unit price for <strong style={{ color: 'var(--text-primary, #fff)' }}>{priceModal.item.name}</strong>
+            </p>
+            <div style={{ position: 'relative', marginBottom: '24px' }}>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted, #aaa)' }}>₹</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                autoFocus
+                value={priceModal.price}
+                onChange={e => setPriceModal({ ...priceModal, price: e.target.value })}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSavePrice(priceModal.item, priceModal.itemKey, priceModal.isPending, priceModal.price);
+                  if (e.key === 'Escape') setPriceModal(null);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px 12px 12px 28px',
+                  fontSize: '16px',
+                  border: '1px solid var(--border-subtle, #333)',
+                  borderRadius: '8px',
+                  background: 'var(--surface-sunken, #000)',
+                  color: 'var(--text-primary, #fff)',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                className={styles.ghostButton} 
+                onClick={() => setPriceModal(null)}
+                style={{ padding: '10px 20px', fontSize: '14px', borderRadius: '8px' }}
+              >
+                Cancel
+              </button>
+              <button 
+                className={styles.primaryButton} 
+                onClick={() => handleSavePrice(priceModal.item, priceModal.itemKey, priceModal.isPending, priceModal.price)}
+                style={{ padding: '10px 20px', fontSize: '14px', borderRadius: '8px' }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }

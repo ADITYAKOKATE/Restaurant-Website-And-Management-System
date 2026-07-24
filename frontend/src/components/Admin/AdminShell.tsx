@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import AdminSidebar from './AdminSidebar';
 import AdminTopbar from './AdminTopbar';
+import AdminNotifier from './AdminNotifier';
 import styles from './Admin.module.css';
 
 export default function AdminShell({
@@ -109,6 +110,9 @@ export default function AdminShell({
 
         <div className={styles.shellContent}>{children}</div>
       </div>
+
+      {/* Global new-order notifier — active on every admin page */}
+      <AdminNotifier />
     </div>
   );
 }

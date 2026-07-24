@@ -152,7 +152,6 @@ npm run start
 
 ---
 
-
 ## 🍛 Project Mission
 **Premacha Wada** is dedicated to preserving the authenticity of Maharashtrian cuisine while leveraging cutting-edge technology to provide a world-class customer experience.
 

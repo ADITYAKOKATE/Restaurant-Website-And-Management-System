@@ -4,32 +4,32 @@ const items = [
   {
     title: 'Signature Platter',
     image:
-      'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/b/b5/Chicken_Tikka_with_some_salad.jpg',
   },
   {
-    title: 'Warm Ambience',
+    title: 'Authentic Thali',
     image:
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg',
   },
   {
-    title: 'Live Kitchen',
+    title: 'Tandoor Specials',
     image:
-      'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/d/d1/Chicken_Tandoor.JPG',
   },
   {
-    title: 'Luxury Table Setting',
+    title: 'Rich Flavors',
     image:
-      'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/7/78/Veg_Kolhapuri.jpg',
   },
   {
     title: 'Family Feast',
     image:
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/6/62/South_Indian_non-veg_Meals.jpg',
   },
   {
-    title: 'Evening Dining',
+    title: 'Aromatic Biryani',
     image:
-      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/8/8b/Awadhi_Vegetable_Biryani.jpg',
   },
 ];
 

@@ -4,32 +4,32 @@ const categories = [
   {
     title: 'Veg Specials',
     image:
-      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/5/5e/Spicy_Shahi_Paneer.jpg',
   },
   {
     title: 'Non-Veg Specials',
     image:
-      'https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/0/00/Chicken_tikka_masala_%28cropped%29.jpg',
   },
   {
     title: 'Handi Dishes',
     image:
-      'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chicken_Handi.JPG',
   },
   {
     title: 'Tandoor',
     image:
-      'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/e/e7/Chicken_tikka2.jpg',
   },
   {
     title: 'Biryani',
     image:
-      'https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/f/f8/Mutton_Dum_biryani.jpg',
   },
   {
     title: 'Maharashtrian Specials',
     image:
-      'https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/7/7f/Dummy_19_W.jpg',
   },
 ];
 

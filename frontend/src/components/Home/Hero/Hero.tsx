@@ -90,7 +90,7 @@ function VisualSection() {
       {/* Main image container */}
       <div className={styles.imageBox}>
         <img
-          src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80"
+          src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Non_Veg_Thali_-_Gandhi_Nagar_Jammu_-_Jammu_%26_Kashmir_-_02.jpg"
           alt="Premium Maharashtrian platter"
           className={styles.heroImage}
           loading="lazy"

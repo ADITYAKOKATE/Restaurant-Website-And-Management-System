@@ -2,29 +2,29 @@ import styles from './FeaturedDishes.module.css';
 
 const dishes = [
   {
-    name: 'Gavran Chicken',
+    name: 'Gavran Chicken Handi (Full)',
     desc: 'Rustic village-style spice blend with deep, rich flavor.',
-    image: 'https://raw.githubusercontent.com/sahil15132/menu-card/main/204.jpeg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chicken_Handi.JPG',
   },
   {
-    name: 'Chicken Raan',
+    name: 'Spl. Chicken Raan',
     desc: 'Slow-cooked and aromatic, made for a premium feast.',
-    image: 'https://raw.githubusercontent.com/sahil15132/menu-card/main/1.jpeg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Chicken_Tandoor.JPG',
   },
   {
-    name: 'Mutton Handi',
+    name: 'Mutton Handi (Full)',
     desc: 'Tender mutton simmered in a signature Maharashtrian gravy.',
-    image: 'https://raw.githubusercontent.com/sahil15132/menu-card/main/227.jpeg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Indian_mutton_Curry.JPG',
   },
   {
     name: 'Paneer Tikka',
     desc: 'Smoky, soft, and perfectly balanced with warm spices.',
-    image: 'https://raw.githubusercontent.com/sahil15132/menu-card/main/46.jpeg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Tandoori_Paneer_Tikka.jpg',
   },
   {
-    name: 'Special Thali',
+    name: 'Spl. Mutton Thali',
     desc: 'A complete dining experience with multiple authentic flavors.',
-    image: 'https://raw.githubusercontent.com/sahil15132/menu-card/main/227.jpeg',
+    image: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg',
   },
 ];
 

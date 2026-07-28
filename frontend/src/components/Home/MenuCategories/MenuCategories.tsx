@@ -4,32 +4,32 @@ const categories = [
   {
     title: 'Veg Specials',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/5/5e/Spicy_Shahi_Paneer.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/174.jpeg',
   },
   {
     title: 'Non-Veg Specials',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/0/00/Chicken_tikka_masala_%28cropped%29.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/189.jpeg',
   },
   {
     title: 'Handi Dishes',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chicken_Handi.JPG',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/199.jpeg',
   },
   {
     title: 'Tandoor',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/e/e7/Chicken_tikka2.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/190.jpeg',
   },
   {
     title: 'Biryani',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/f/f8/Mutton_Dum_biryani.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/97.jpeg',
   },
   {
     title: 'Maharashtrian Specials',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/7/7f/Dummy_19_W.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/218.jpeg',
   },
 ];
 

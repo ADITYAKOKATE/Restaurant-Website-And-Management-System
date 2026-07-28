@@ -153,7 +153,7 @@ export default function AdminMenuManager() {
 
   const preview =
     editingItem?.image ||
-    "https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg";
+    "https://raw.githubusercontent.com/sahil15132/menu-card/main/14.jpeg";
 
   return (
     <>

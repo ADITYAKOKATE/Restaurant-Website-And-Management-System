@@ -4,32 +4,32 @@ const items = [
   {
     title: 'Signature Platter',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/b/b5/Chicken_Tikka_with_some_salad.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/10.jpeg',
   },
   {
     title: 'Authentic Thali',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/15.jpeg',
   },
   {
     title: 'Tandoor Specials',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/d/d1/Chicken_Tandoor.JPG',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/3.jpeg',
   },
   {
     title: 'Rich Flavors',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/7/78/Veg_Kolhapuri.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/162.jpeg',
   },
   {
     title: 'Family Feast',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/6/62/South_Indian_non-veg_Meals.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/5.jpeg',
   },
   {
     title: 'Aromatic Biryani',
     image:
-      'https://upload.wikimedia.org/wikipedia/commons/8/8b/Awadhi_Vegetable_Biryani.jpg',
+      'https://raw.githubusercontent.com/sahil15132/menu-card/main/90.jpeg',
   },
 ];
 

@@ -60,7 +60,7 @@ export default function About() {
 
           <div className={styles.visualImage}>
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg"
+              src="https://raw.githubusercontent.com/sahil15132/menu-card/main/14.jpeg"
               alt="Premium plated dish from Premacha Wada"
               loading="lazy"
             />

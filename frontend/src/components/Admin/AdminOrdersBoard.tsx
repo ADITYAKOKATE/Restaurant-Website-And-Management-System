@@ -151,7 +151,7 @@ export default function AdminOrdersBoard() {
                         <div className={styles.orderItemsList}>
                           {order.items.slice(0, 3).map((item) => (
                             <div key={`${order._id}-${item.name}`} className={styles.orderLine}>
-                              <img src={item.image || 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg'} alt={item.name} className={styles.thumb} />
+                              <img src={item.image || 'https://raw.githubusercontent.com/sahil15132/menu-card/main/14.jpeg'} alt={item.name} className={styles.thumb} />
                               <div style={{ flex: 1 }}>
                                 <strong style={{ display: 'block' }}>{item.name}</strong>
                                 <span className={styles.orderItemText}>Qty {item.quantity}</span>

@@ -1,6 +1,6 @@
 # Premacha Wada | Enterprise Restaurant Management System
 
-A production-grade, full-stack ecosystem designed for high-volume Maharashtrian restaurant operations. This platform orchestrates a complex, multi-stakeholder workflow involving Customers, Administrators, Kitchen Staff, and Delivery Personnel. 
+A production-grade, full-stack ecosystem designed for high-volume Maharashtrian restaurant operations. This platform orchestrates a complex, multi-stakeholder workflow involving Customers, Administrators, Kitchen Staff, and Delivery Personnel.
 
 ---
 

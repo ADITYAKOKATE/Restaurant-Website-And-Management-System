@@ -1,34 +1,51 @@
+'use client';
+import { useEffect, useState } from 'react';
 import styles from './FeaturedDishes.module.css';
 
-const dishes = [
-  {
-    name: 'Gavran Chicken Handi (Full)',
-    desc: 'Rustic village-style spice blend with deep, rich flavor.',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chicken_Handi.JPG',
-  },
-  {
-    name: 'Spl. Chicken Raan',
-    desc: 'Slow-cooked and aromatic, made for a premium feast.',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/d/d1/Chicken_Tandoor.JPG',
-  },
-  {
-    name: 'Mutton Handi (Full)',
-    desc: 'Tender mutton simmered in a signature Maharashtrian gravy.',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Indian_mutton_Curry.JPG',
-  },
-  {
-    name: 'Paneer Tikka',
-    desc: 'Smoky, soft, and perfectly balanced with warm spices.',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Tandoori_Paneer_Tikka.jpg',
-  },
-  {
-    name: 'Spl. Mutton Thali',
-    desc: 'A complete dining experience with multiple authentic flavors.',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Mutton_Thali.jpg',
-  },
+interface Dish {
+  name: string;
+  desc: string;
+  image: string;
+}
+
+const FEATURED_NAMES = [
+  'Gavran Chicken Handi (Full)',
+  'Spl. Chicken Raan',
+  'Mutton Handi (Full)',
+  'Paneer Tikka',
+  'Spl. Mutton Thali'
 ];
 
+const DEFAULT_DESCS: Record<string, string> = {
+  'Gavran Chicken Handi (Full)': 'Rustic village-style spice blend with deep, rich flavor.',
+  'Spl. Chicken Raan': 'Slow-cooked and aromatic, made for a premium feast.',
+  'Mutton Handi (Full)': 'Tender mutton simmered in a signature Maharashtrian gravy.',
+  'Paneer Tikka': 'Smoky, soft, and perfectly balanced with warm spices.',
+  'Spl. Mutton Thali': 'A complete dining experience with multiple authentic flavors.'
+};
+
 export default function FeaturedDishes() {
+  const [dishes, setDishes] = useState<Dish[]>([]);
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.json())
+      .then((data: any[]) => {
+         const fetchedDishes = FEATURED_NAMES.map(name => {
+           const item = data.find(d => d.name === name);
+           return {
+             name,
+             desc: item?.description || DEFAULT_DESCS[name],
+             image: item?.image || ''
+           };
+         }).filter(d => d.image !== '');
+         setDishes(fetchedDishes);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (dishes.length === 0) return null;
+
   return (
     <section className={`section ${styles.section}`} aria-labelledby="signature-dishes-heading">
       <div className={styles.container}>

@@ -1,39 +1,37 @@
+'use client';
+import { useEffect, useState } from 'react';
 import styles from './Gallery.module.css';
 
-const items = [
-  {
-    title: 'Signature Platter',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/10.jpeg',
-  },
-  {
-    title: 'Authentic Thali',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/15.jpeg',
-  },
-  {
-    title: 'Tandoor Specials',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/3.jpeg',
-  },
-  {
-    title: 'Rich Flavors',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/162.jpeg',
-  },
-  {
-    title: 'Family Feast',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/5.jpeg',
-  },
-  {
-    title: 'Aromatic Biryani',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/90.jpeg',
-  },
+const GALLERY_MAPPING = [
+  { title: 'Signature Platter', name: 'Spl. Chicken Kharda Thali' },
+  { title: 'Authentic Thali', name: 'Spl. Mutton Kharda Thali' },
+  { title: 'Tandoor Specials', name: 'Spl. Chicken Achari Raan' },
+  { title: 'Rich Flavors', name: 'Veg Kadai' },
+  { title: 'Family Feast', name: 'Spl. Veg Thali' },
+  { title: 'Aromatic Biryani', name: 'Veg Hydrabadi Biryani' },
 ];
 
 export default function Gallery() {
+  const [items, setItems] = useState<{title: string, image: string}[]>([]);
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        const fetchedItems = GALLERY_MAPPING.map(mapping => {
+          const item = data.find(d => d.name === mapping.name);
+          return {
+            title: mapping.title,
+            image: item?.image || ''
+          };
+        }).filter(i => i.image !== '');
+        setItems(fetchedItems);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (items.length === 0) return null;
+
   return (
     <section className={`section ${styles.section}`} aria-labelledby="gallery-heading">
       <div className={styles.container}>

@@ -1,39 +1,37 @@
+'use client';
+import { useEffect, useState } from 'react';
 import styles from './MenuCategories.module.css';
 
-const categories = [
-  {
-    title: 'Veg Specials',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/174.jpeg',
-  },
-  {
-    title: 'Non-Veg Specials',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/189.jpeg',
-  },
-  {
-    title: 'Handi Dishes',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/199.jpeg',
-  },
-  {
-    title: 'Tandoor',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/190.jpeg',
-  },
-  {
-    title: 'Biryani',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/97.jpeg',
-  },
-  {
-    title: 'Maharashtrian Specials',
-    image:
-      'https://raw.githubusercontent.com/sahil15132/menu-card/main/218.jpeg',
-  },
+const CATEGORY_MAPPING = [
+  { title: 'Veg Specials', name: 'Veg Maharaja' },
+  { title: 'Non-Veg Specials', name: 'Chicken Tikka Masala' },
+  { title: 'Handi Dishes', name: 'Chicken Handi (Full)' },
+  { title: 'Tandoor', name: 'Chicken Afgani' },
+  { title: 'Biryani', name: 'Mutton Dum Biryani (Full)' },
+  { title: 'Maharashtrian Specials', name: 'Mutton Kharda' },
 ];
 
 export default function MenuCategories() {
+  const [categories, setCategories] = useState<{title: string, image: string}[]>([]);
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        const fetchedCats = CATEGORY_MAPPING.map(mapping => {
+          const item = data.find(d => d.name === mapping.name);
+          return {
+            title: mapping.title,
+            image: item?.image || ''
+          };
+        }).filter(i => i.image !== '');
+        setCategories(fetchedCats);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (categories.length === 0) return null;
+
   return (
     <section className={`section ${styles.section}`} aria-labelledby="menu-categories-heading">
       <div className={styles.container}>

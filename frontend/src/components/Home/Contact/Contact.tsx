@@ -12,8 +12,8 @@ export default function Contact() {
           <h2 id="contact-heading" className={styles.heading}>Plan Your Visit with Ease</h2>
           <div className={styles.details}>
             <p><strong>📍 Address:</strong> 747, Aurangabad - Ahmednagar - Pune Hwy, Wagholi, Pune, Maharashtra 412207</p>
-            <p><strong>🕒 Hours:</strong> 11:00 AM - 10:00 PM</p>
-            <p><strong>📞 Phone:</strong> +91 98765 43210</p>
+            <p><strong>🕒 Hours:</strong> 11:00 AM – 3:00 PM</p>
+            <p><strong>📞 Phone:</strong> <a href="tel:+918421665617" style={{ color: 'inherit', textDecoration: 'none' }}>+91 8421665617</a></p>
           </div>
           <div className={styles.actionRow}>
             <a

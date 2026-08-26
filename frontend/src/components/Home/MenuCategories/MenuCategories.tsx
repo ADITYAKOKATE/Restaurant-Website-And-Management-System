@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import styles from './MenuCategories.module.css';
 
 const CATEGORY_MAPPING = [
@@ -12,7 +13,7 @@ const CATEGORY_MAPPING = [
 ];
 
 export default function MenuCategories() {
-  const [categories, setCategories] = useState<{title: string, image: string}[]>([]);
+  const [categories, setCategories] = useState<{title: string, name: string, image: string}[]>([]);
 
   useEffect(() => {
     fetch('/api/menu')
@@ -22,6 +23,7 @@ export default function MenuCategories() {
           const item = data.find(d => d.name === mapping.name);
           return {
             title: mapping.title,
+            name: mapping.name,
             image: item?.image || ''
           };
         }).filter(i => i.image !== '');
@@ -42,12 +44,19 @@ export default function MenuCategories() {
 
         <div className={styles.grid}>
           {categories.map((category) => (
-            <article key={category.title} className={styles.card}>
-              <img src={category.image} alt={category.title} className={styles.image} loading="lazy" />
-              <div className={styles.overlay}></div>
-              <span className={styles.cardIcon}>✦</span>
-              <h3>{category.title}</h3>
-            </article>
+            <Link
+              key={category.title}
+              href={`/menu?search=${encodeURIComponent(category.name)}`}
+              className={styles.cardLink}
+              title={`View ${category.title} on menu`}
+            >
+              <article className={styles.card}>
+                <img src={category.image} alt={category.title} className={styles.image} loading="lazy" />
+                <div className={styles.overlay}></div>
+                <span className={styles.cardIcon}>✦</span>
+                <h3>{category.title}</h3>
+              </article>
+            </Link>
           ))}
         </div>
       </div>

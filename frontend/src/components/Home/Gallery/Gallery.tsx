@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import styles from './Gallery.module.css';
 
 const GALLERY_MAPPING = [
@@ -12,7 +13,7 @@ const GALLERY_MAPPING = [
 ];
 
 export default function Gallery() {
-  const [items, setItems] = useState<{title: string, image: string}[]>([]);
+  const [items, setItems] = useState<{title: string, name: string, image: string}[]>([]);
 
   useEffect(() => {
     fetch('/api/menu')
@@ -22,6 +23,7 @@ export default function Gallery() {
           const item = data.find(d => d.name === mapping.name);
           return {
             title: mapping.title,
+            name: mapping.name,
             image: item?.image || ''
           };
         }).filter(i => i.image !== '');
@@ -42,11 +44,22 @@ export default function Gallery() {
 
         <div className={styles.grid}>
           {items.map((item, index) => (
-            <article key={item.title} className={`${styles.tile} ${index % 3 === 0 ? styles.tall : ''}`}>
+            <Link
+              key={item.title}
+              href={`/menu?dish=${encodeURIComponent(item.name)}`}
+              className={`${styles.tile} ${index % 3 === 0 ? styles.tall : ''}`}
+              title={`View ${item.name} on menu`}
+            >
               <img src={item.image} alt={item.title} className={styles.image} loading="lazy" />
               <div className={styles.overlay}></div>
-              <h3>{item.title}</h3>
-            </article>
+              <div className={styles.badge}>
+                <span>Order Now ↗</span>
+              </div>
+              <div className={styles.tileContent}>
+                <h3>{item.title}</h3>
+                <span className={styles.dishName}>{item.name}</span>
+              </div>
+            </Link>
           ))}
         </div>
       </div>

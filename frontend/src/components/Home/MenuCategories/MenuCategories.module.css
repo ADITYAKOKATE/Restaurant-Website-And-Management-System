@@ -34,6 +34,13 @@
   gap: var(--space-lg);
 }
 
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  cursor: pointer;
+}
+
 .card {
   min-height: 220px;
   display: flex;

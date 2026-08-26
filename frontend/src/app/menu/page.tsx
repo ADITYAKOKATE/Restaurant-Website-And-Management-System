@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 
@@ -17,8 +17,9 @@ interface MenuItem {
   isBestseller: boolean;
 }
 
-export default function MenuPage() {
+function MenuContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { addToCart } = useCart();
   
@@ -29,18 +30,47 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [previewDish, setPreviewDish] = useState<MenuItem | null>(null);
+  const [highlightedDishId, setHighlightedDishId] = useState<string | null>(null);
+
+  const initialParamHandled = useRef(false);
 
   useEffect(() => {
     const fetchMenu = async () => {
       try {
         const res = await fetch(`/api/menu`);
         if (res.ok) {
-          const data = await res.json();
+          const data: MenuItem[] = await res.json();
           setItems(data);
           
           // Extract unique categories
           const cats = Array.from(new Set(data.map((item: MenuItem) => item.category))) as string[];
           setCategories(['All', ...cats]);
+
+          // Handle URL Query Params
+          const dishParam = searchParams.get('dish');
+          const searchParam = searchParams.get('search');
+          const categoryParam = searchParams.get('category');
+
+          if (dishParam || searchParam) {
+            const queryVal = dishParam || searchParam || '';
+            setSearchQuery(queryVal);
+            setActiveCategory('All');
+
+            const matched = data.find(
+              (i) => i.name.toLowerCase() === queryVal.toLowerCase() ||
+                     i.name.toLowerCase().includes(queryVal.toLowerCase())
+            );
+            if (matched) {
+              setHighlightedDishId(matched._id);
+            }
+          } else if (categoryParam) {
+            const catLower = categoryParam.toLowerCase();
+            const matchedCat = cats.find(c => c.toLowerCase().includes(catLower) || catLower.includes(c.toLowerCase()));
+            if (matchedCat) {
+              setActiveCategory(matchedCat);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to fetch menu:', err);
@@ -50,7 +80,19 @@ export default function MenuPage() {
     };
     
     fetchMenu();
-  }, []);
+  }, [searchParams]);
+
+  // Smooth scroll to highlighted dish when items load
+  useEffect(() => {
+    if (highlightedDishId && !isLoading) {
+      setTimeout(() => {
+        const el = document.getElementById(`dish-card-${highlightedDishId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  }, [highlightedDishId, isLoading]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -68,15 +110,16 @@ export default function MenuPage() {
     showToast(`Added ${item.name} to cart!`, 'success');
   };
 
-  // When the user types in the search box, reset the category filter to 'All'
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchQuery(val);
+    setHighlightedDishId(null);
     if (val.trim()) setActiveCategory('All');
   };
 
   const clearSearch = () => {
     setSearchQuery('');
+    setHighlightedDishId(null);
   };
 
   const filteredItems = items.filter(item => {
@@ -99,6 +142,97 @@ export default function MenuPage() {
         <div className="toast-container">
           <div className={`toast toast-${toast.type}`}>
             {toast.type === 'success' ? '✅' : '⚠️'} {toast.message}
+          </div>
+        </div>
+      )}
+
+      {/* Dish Detail / Image Zoom Modal */}
+      {previewDish && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 'var(--space-md)'
+          }}
+          onClick={() => setPreviewDish(null)}
+        >
+          <div 
+            style={{
+              backgroundColor: 'var(--bg-card)',
+              border: '1px solid var(--border-accent)',
+              borderRadius: 'var(--radius-xl)',
+              maxWidth: '540px',
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-xl)',
+              animation: 'fadeInScale 0.25s ease'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ position: 'relative', height: '300px', width: '100%' }}>
+              <img 
+                src={previewDish.image} 
+                alt={previewDish.name} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <button 
+                onClick={() => setPreviewDish(null)}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: 'rgba(0,0,0,0.6)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ padding: 'var(--space-xl)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-xs)' }}>
+                <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>{previewDish.name}</h2>
+                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--secondary)' }}>₹{previewDish.price}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: 'var(--space-md)' }}>
+                {previewDish.isVeg ? (
+                  <span className="badge badge-veg">VEG</span>
+                ) : (
+                  <span className="badge" style={{ background: 'rgba(255, 71, 87, 0.15)', color: '#FF4757', border: '1px solid rgba(255, 71, 87, 0.3)' }}>NON-VEG</span>
+                )}
+                {previewDish.isBestseller && <span className="badge badge-bestseller">BESTSELLER</span>}
+                <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.08)', color: 'var(--text-secondary)' }}>{previewDish.category}</span>
+              </div>
+              {previewDish.description && (
+                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 'var(--space-lg)' }}>
+                  {previewDish.description}
+                </p>
+              )}
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', padding: '14px', fontSize: '16px', fontWeight: 600 }}
+                onClick={() => {
+                  handleAddToCart(previewDish);
+                  setPreviewDish(null);
+                }}
+              >
+                Add to Cart • ₹{previewDish.price}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -160,11 +294,27 @@ export default function MenuPage() {
 
               {/* Search results hint */}
               {isSearchActive && (
-                <p className="menu-search-results-hint">
-                  {filteredItems.length === 0
-                    ? `No results for "${searchQuery.trim()}"`
-                    : `${filteredItems.length} result${filteredItems.length !== 1 ? 's' : ''} for "${searchQuery.trim()}"`}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <p className="menu-search-results-hint" style={{ margin: 0 }}>
+                    {filteredItems.length === 0
+                      ? `No results for "${searchQuery.trim()}"`
+                      : `Showing results for "${searchQuery.trim()}" (${filteredItems.length} dish${filteredItems.length !== 1 ? 'es' : ''})`}
+                  </p>
+                  <button 
+                    onClick={clearSearch} 
+                    style={{ 
+                      background: 'transparent', 
+                      border: '1px solid var(--border-default)', 
+                      color: 'var(--primary)', 
+                      borderRadius: 'var(--radius-full)', 
+                      padding: '2px 10px', 
+                      fontSize: '12px', 
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    Show All Dishes
+                  </button>
+                </div>
               )}
 
               {/* Category Filter Pills */}
@@ -174,7 +324,7 @@ export default function MenuPage() {
                     key={cat}
                     className={`btn ${activeCategory === cat ? 'btn-primary' : 'btn-ghost'}`}
                     style={{ padding: '8px 16px', textTransform: 'capitalize' }}
-                    onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
+                    onClick={() => { setActiveCategory(cat); setSearchQuery(''); setHighlightedDishId(null); }}
                   >
                     {cat}
                   </button>
@@ -220,55 +370,95 @@ export default function MenuPage() {
                   </p>
                   {isSearchActive && (
                     <button className="btn btn-ghost" onClick={clearSearch}>
-                      Clear Search
+                      Clear Search & View All
                     </button>
                   )}
                 </div>
               ) : (
-                filteredItems.map((item) => (
-                  <div key={item._id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)', padding: '0', overflow: 'hidden' }}>
-                    
-                    <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                        loading="lazy"
-                      />
-                      <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
-                        {item.isVeg ? (
-                          <span className="badge badge-veg">VEG</span>
-                        ) : (
-                          <span className="badge" style={{ background: 'rgba(255, 71, 87, 0.15)', color: '#FF4757', border: '1px solid rgba(255, 71, 87, 0.3)' }}>NON-VEG</span>
-                        )}
-                        {item.isBestseller && <span className="badge badge-bestseller">BESTSELLER</span>}
+                filteredItems.map((item) => {
+                  const isHighlighted = highlightedDishId === item._id;
+                  return (
+                    <div 
+                      key={item._id} 
+                      id={`dish-card-${item._id}`}
+                      className="card" 
+                      style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: 'var(--space-md)', 
+                        padding: '0', 
+                        overflow: 'hidden',
+                        borderColor: isHighlighted ? 'var(--primary)' : undefined,
+                        boxShadow: isHighlighted ? '0 0 30px rgba(255, 107, 53, 0.45)' : undefined,
+                        transform: isHighlighted ? 'scale(1.02)' : undefined,
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      
+                      <div 
+                        style={{ position: 'relative', height: '220px', width: '100%', cursor: 'pointer' }}
+                        onClick={() => setPreviewDish(item)}
+                        title="Click to zoom & view details"
+                      >
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }} 
+                          loading="lazy"
+                        />
+                        <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '8px' }}>
+                          {item.isVeg ? (
+                            <span className="badge badge-veg">VEG</span>
+                          ) : (
+                            <span className="badge" style={{ background: 'rgba(255, 71, 87, 0.15)', color: '#FF4757', border: '1px solid rgba(255, 71, 87, 0.3)' }}>NON-VEG</span>
+                          )}
+                          {item.isBestseller && <span className="badge badge-bestseller">BESTSELLER</span>}
+                        </div>
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '10px',
+                          left: '10px',
+                          background: 'rgba(0, 0, 0, 0.65)',
+                          backdropFilter: 'blur(6px)',
+                          padding: '4px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '11px',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}>
+                          <span>🔍 Click image to view</span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-sm)' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 600 }}>{item.name}</h3>
-                        <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--secondary)' }}>₹{item.price}</span>
-                      </div>
-                      
-                      {item.description && (
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
-                          {item.description}
-                        </p>
-                      )}
-                      
-                      <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)' }}>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ width: '100%' }}
-                          onClick={() => handleAddToCart(item)}
-                        >
-                          Add to Cart
-                        </button>
+                      <div style={{ padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-sm)' }}>
+                          <h3 style={{ fontSize: '18px', fontWeight: 600, color: isHighlighted ? 'var(--primary)' : 'inherit' }}>
+                            {item.name}
+                          </h3>
+                          <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--secondary)' }}>₹{item.price}</span>
+                        </div>
+                        
+                        {item.description && (
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: 'var(--space-xs)', marginBottom: 'var(--space-md)' }}>
+                            {item.description}
+                          </p>
+                        )}
+                        
+                        <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ width: '100%' }}
+                            onClick={() => handleAddToCart(item)}
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -276,5 +466,19 @@ export default function MenuPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function MenuPage() {
+  return (
+    <Suspense fallback={
+      <main className="page-content section">
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4xl)' }}>
+          <div className="spinner"></div>
+        </div>
+      </main>
+    }>
+      <MenuContent />
+    </Suspense>
   );
 }

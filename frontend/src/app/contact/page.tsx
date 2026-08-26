@@ -65,21 +65,25 @@ export default function ContactPage() {
                     <span>📞</span>
                     <div>
                       <strong>Phone</strong>
-                      <p style={{ color: 'var(--text-secondary)' }}>+91 98765 43210</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>
+                        <a href="tel:+918421665617" style={{ color: 'inherit', textDecoration: 'none' }}>+91 8421665617</a>
+                      </p>
                     </div>
                   </li>
                   <li style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                     <span>📧</span>
                     <div>
                       <strong>Email</strong>
-                      <p style={{ color: 'var(--text-secondary)' }}>premachawada1@gmail.com</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>
+                        <a href="mailto:premachawada1@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>premachawada1@gmail.com</a>
+                      </p>
                     </div>
                   </li>
                   <li style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                     <span>🕒</span>
                     <div>
                       <strong>Opening Hours</strong>
-                      <p style={{ color: 'var(--text-secondary)' }}>Everyday: 11:00 AM - 10:00 PM</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>Everyday: 11:00 AM – 3:00 PM</p>
                     </div>
                   </li>
                 </ul>

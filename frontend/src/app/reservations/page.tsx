@@ -15,14 +15,14 @@ export default function ReservationsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [timeSlot, setTimeSlot] = useState('18:00');
+  const [timeSlot, setTimeSlot] = useState('12:00');
   const [guests, setGuests] = useState<number | string>(2);
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [bookedTables, setBookedTables] = useState<BookedTable[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  const timeSlots = ["11:00", "12:00", "13:00", "14:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00"];
+  const timeSlots = ["11:00", "12:00", "13:00", "14:00", "15:00"];
 
   useEffect(() => {
     fetchAvailability();
